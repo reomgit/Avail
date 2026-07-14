@@ -9,6 +9,7 @@ let package = Package(
         .library(name: "AvailCore", targets: ["AvailCore"]),
         .library(name: "AvailEPUB", targets: ["AvailEPUB"]),
         .library(name: "AvailPDF", targets: ["AvailPDF"]),
+        .library(name: "AvailPlayback", targets: ["AvailPlayback"]),
     ],
     dependencies: [
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.20"),
@@ -21,6 +22,10 @@ let package = Package(
             resources: [.process("Resources")]
         ),
         .target(name: "AvailCore"),
+        .target(
+            name: "AvailPlayback",
+            dependencies: ["AvailCore"]
+        ),
         .target(
             name: "AvailEPUB",
             dependencies: [
@@ -52,6 +57,10 @@ let package = Package(
         .testTarget(
             name: "AvailPDFTests",
             dependencies: ["AvailCore", "AvailPDF"]
+        ),
+        .testTarget(
+            name: "AvailPlaybackTests",
+            dependencies: ["AvailCore", "AvailPlayback"]
         ),
     ]
 )
