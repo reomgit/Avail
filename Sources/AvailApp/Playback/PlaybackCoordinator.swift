@@ -1,0 +1,416 @@
+import AvailCore
+import AvailPlayback
+import Foundation
+import NaturalLanguage
+import Observation
+
+enum PlaybackState: Equatable {
+    case stopped
+    case bufferingForIndex
+    case playing
+    case paused
+    case seeking
+    case failed(String)
+}
+
+@MainActor
+@Observable
+final class PlaybackCoordinator {
+    private let engine: any NarrationEngine
+    private let indexStore: ReadingIndexStore
+    private let libraryStore: LibraryStore
+    private let indexingCoordinator: any IndexingPrioritizing
+    private let nowPlaying: any NowPlayingControlling
+    private let persistence: PlaybackPersistence
+    private var narrationEventTask: Task<Void, Never>?
+    private var indexingUpdateTask: Task<Void, Never>?
+    private var queuedChunks: [SpeechChunk] = []
+    private var currentChunkGlobalWordOffset = 0
+    private var currentUTF16Offset = 0
+    private var currentNormalizedWordOffset = 0
+
+    private(set) var state: PlaybackState = .stopped
+    private(set) var currentBookID: UUID?
+    private(set) var currentChunk: SpeechChunk?
+    private(set) var highlightedChunkID: UUID?
+    private(set) var highlightRange: NSRange?
+    var followMode = true
+
+    init(
+        engine: any NarrationEngine,
+        indexStore: ReadingIndexStore,
+        libraryStore: LibraryStore,
+        indexingCoordinator: any IndexingPrioritizing,
+        nowPlaying: any NowPlayingControlling = NowPlayingController(),
+        persistenceDebounce: Duration = .seconds(1)
+    ) {
+        self.engine = engine
+        self.indexStore = indexStore
+        self.libraryStore = libraryStore
+        self.indexingCoordinator = indexingCoordinator
+        self.nowPlaying = nowPlaying
+        self.persistence = PlaybackPersistence(libraryStore: libraryStore, debounce: persistenceDebounce)
+        observeNarrationEvents()
+        observeIndexingUpdates()
+        installRemoteCommands()
+    }
+
+    func play(bookID: UUID) async {
+        if currentBookID == bookID {
+            switch state {
+            case .paused:
+                resume()
+                return
+            case .stopped:
+                if currentChunk != nil {
+                    speakCurrentChunk()
+                    return
+                }
+            default:
+                return
+            }
+        }
+
+        if currentBookID != nil {
+            persistImmediately()
+            engine.stop()
+        }
+
+        do {
+            guard let record = try libraryStore.book(id: bookID) else { throw LibraryError.missingRecord }
+            currentBookID = bookID
+            highlightedChunkID = nil
+            highlightRange = nil
+            try await restore(record: record)
+            if currentChunk == nil {
+                await bufferForIndex(after: nil)
+                return
+            }
+            speakCurrentChunk()
+            await updateNowPlaying()
+        } catch {
+            setState(.failed(String(describing: error)))
+        }
+    }
+
+    func pause() {
+        guard currentChunk != nil else { return }
+        engine.pause()
+        setState(.paused)
+        persistImmediately()
+    }
+
+    func resume() {
+        guard currentChunk != nil else { return }
+        engine.resume()
+        setState(.playing)
+    }
+
+    func stop() {
+        persistImmediately()
+        engine.stop()
+        setState(.stopped)
+    }
+
+    func seek(by seconds: TimeInterval) async {
+        guard let bookID = currentBookID,
+              let record = try? libraryStore.book(id: bookID) else { return }
+        let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
+        let target = max(0, currentNormalizedWordOffset + Int(seconds * wordsPerSecond))
+        setState(.seeking)
+        do {
+            guard let position = try await indexStore.position(bookID: bookID, normalizedWordOffset: target) else {
+                let manifest = try await indexStore.manifest(bookID: bookID)
+                if manifest.isComplete { setState(.stopped) } else { await bufferForIndex(after: currentChunk?.locator) }
+                return
+            }
+            try await move(to: position.chunk, requestedWordOffset: position.globalWordOffset, stopFirst: true)
+        } catch {
+            setState(.failed(String(describing: error)))
+        }
+    }
+
+    func nextChapter() async {
+        await moveChapter(direction: 1)
+    }
+
+    func previousChapter() async {
+        await moveChapter(direction: -1)
+    }
+
+    func applicationWillTerminate() {
+        persistImmediately()
+        nowPlaying.teardown()
+    }
+
+    private func restore(record: LibraryBookRecord) async throws {
+        let allChunks = try await indexStore.chunks(bookID: record.id, around: nil, limit: .max)
+        guard !allChunks.isEmpty else {
+            currentChunk = nil
+            queuedChunks = []
+            return
+        }
+
+        if let saved = record.readingPosition(),
+           let exactIndex = allChunks.firstIndex(where: { $0.id == saved.chunkID }) {
+            let globalStart = allChunks[..<exactIndex].reduce(0) { $0 + $1.wordCount }
+            configureCurrent(
+                chunks: Array(allChunks[exactIndex..<min(exactIndex + 2, allChunks.count)]),
+                globalStart: globalStart,
+                utf16Offset: saved.utf16Offset,
+                normalizedWordOffset: saved.normalizedWordOffset
+            )
+            return
+        }
+
+        let requestedOffset = record.readingPosition()?.normalizedWordOffset ?? 0
+        guard let fallback = try await indexStore.position(bookID: record.id, normalizedWordOffset: requestedOffset),
+              let fallbackIndex = allChunks.firstIndex(where: { $0.id == fallback.chunk.id }) else {
+            currentChunk = nil
+            queuedChunks = []
+            return
+        }
+        configureCurrent(
+            chunks: Array(allChunks[fallbackIndex..<min(fallbackIndex + 2, allChunks.count)]),
+            globalStart: fallback.globalWordOffset,
+            utf16Offset: 0,
+            normalizedWordOffset: fallback.globalWordOffset
+        )
+    }
+
+    private func configureCurrent(
+        chunks: [SpeechChunk],
+        globalStart: Int,
+        utf16Offset: Int,
+        normalizedWordOffset: Int
+    ) {
+        queuedChunks = Array(chunks.prefix(2))
+        currentChunk = queuedChunks.first
+        currentChunkGlobalWordOffset = globalStart
+        currentUTF16Offset = utf16Offset
+        currentNormalizedWordOffset = normalizedWordOffset
+    }
+
+    private func speakCurrentChunk() {
+        guard let currentChunk,
+              let bookID = currentBookID,
+              let record = try? libraryStore.book(id: bookID) else { return }
+        let rate = Float(0.5 * max(0.5, min(record.narrationRate, 2)))
+        engine.speak(
+            NarrationRequest(
+                chunk: currentChunk,
+                voiceIdentifier: record.voiceIdentifier,
+                languageCode: record.languageCode,
+                rate: rate,
+                startUTF16Offset: currentUTF16Offset
+            )
+        )
+        setState(.playing)
+    }
+
+    private func advanceAfterFinishedChunk() async {
+        guard let bookID = currentBookID, let currentChunk else { return }
+        do {
+            let allChunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
+            if let currentIndex = allChunks.firstIndex(where: { $0.id == currentChunk.id }),
+               allChunks.indices.contains(currentIndex + 1) {
+                let next = allChunks[currentIndex + 1]
+                try await move(to: next, requestedWordOffset: currentChunkGlobalWordOffset + currentChunk.wordCount, stopFirst: false)
+                return
+            }
+            let manifest = try await indexStore.manifest(bookID: bookID)
+            if manifest.isComplete {
+                persistImmediately()
+                setState(.stopped)
+            } else {
+                await bufferForIndex(after: currentChunk.locator)
+            }
+        } catch {
+            setState(.failed(String(describing: error)))
+        }
+    }
+
+    private func move(to chunk: SpeechChunk, requestedWordOffset: Int, stopFirst: Bool) async throws {
+        guard let bookID = currentBookID else { return }
+        let allChunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
+        guard let index = allChunks.firstIndex(where: { $0.id == chunk.id }) else { return }
+        if stopFirst { engine.stop() }
+        let globalStart = allChunks[..<index].reduce(0) { $0 + $1.wordCount }
+        configureCurrent(
+            chunks: Array(allChunks[index..<min(index + 2, allChunks.count)]),
+            globalStart: globalStart,
+            utf16Offset: 0,
+            normalizedWordOffset: requestedWordOffset
+        )
+        persistImmediately()
+        speakCurrentChunk()
+        await updateNowPlaying()
+    }
+
+    private func moveChapter(direction: Int) async {
+        guard let bookID = currentBookID, let currentChunk else { return }
+        do {
+            let sections = try await indexStore.sections(bookID: bookID).sorted { $0.ordinal < $1.ordinal }
+            let chunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
+            guard let currentSectionIndex = sections.firstIndex(where: { $0.id == currentChunk.sectionID }) else { return }
+            var index = currentSectionIndex + direction
+            while sections.indices.contains(index) {
+                if let target = sections[index].chunkIDs.compactMap({ id in chunks.first(where: { $0.id == id }) }).first {
+                    try await move(to: target, requestedWordOffset: 0, stopFirst: true)
+                    return
+                }
+                index += direction
+            }
+        } catch {
+            setState(.failed(String(describing: error)))
+        }
+    }
+
+    private func bufferForIndex(after locator: SourceLocator?) async {
+        guard let bookID = currentBookID else { return }
+        engine.stop()
+        setState(.bufferingForIndex)
+        indexingCoordinator.prioritize(bookID: bookID, after: locator)
+    }
+
+    private func resumeAfterIndexUpdate(_ update: IndexingUpdate) async {
+        guard state == .bufferingForIndex,
+              update.bookID == currentBookID,
+              update.progress.phase != .failed else { return }
+        await advanceAfterFinishedChunk()
+    }
+
+    private func handle(_ event: NarrationEvent) async {
+        switch event {
+        case let .voiceFallback(_, selectedIdentifier):
+            if let currentBookID { try? libraryStore.saveVoiceIdentifier(selectedIdentifier, bookID: currentBookID) }
+        case .started:
+            setState(.playing)
+        case let .willSpeakRange(chunkID, range):
+            guard chunkID == currentChunk?.id, let currentChunk else { return }
+            highlightedChunkID = chunkID
+            highlightRange = range
+            currentUTF16Offset = range.location
+            currentNormalizedWordOffset = currentChunkGlobalWordOffset + wordCount(
+                beforeUTF16Offset: range.location,
+                in: currentChunk.text
+            )
+            if let position = currentPosition() { persistence.schedule(position) }
+            await updateNowPlaying()
+        case .paused:
+            setState(.paused)
+        case .resumed:
+            setState(.playing)
+        case let .finished(chunkID):
+            if chunkID == currentChunk?.id { await advanceAfterFinishedChunk() }
+        case .cancelled:
+            break
+        }
+    }
+
+    private func wordCount(beforeUTF16Offset offset: Int, in text: String) -> Int {
+        let length = min(max(0, offset), text.utf16.count)
+        let prefix = (text as NSString).substring(with: NSRange(location: 0, length: length))
+        let tokenizer = NLTokenizer(unit: .word)
+        tokenizer.string = prefix
+        var count = 0
+        tokenizer.enumerateTokens(in: prefix.startIndex..<prefix.endIndex) { _, _ in
+            count += 1
+            return true
+        }
+        return count
+    }
+
+    private func currentPosition() -> ReadingPosition? {
+        guard let bookID = currentBookID, let currentChunk else { return nil }
+        return ReadingPosition(
+            bookID: bookID,
+            sectionID: currentChunk.sectionID,
+            chunkID: currentChunk.id,
+            utf16Offset: currentUTF16Offset,
+            normalizedWordOffset: currentNormalizedWordOffset,
+            updatedAt: Date()
+        )
+    }
+
+    private func persistImmediately() {
+        persistence.flush(currentPosition())
+    }
+
+    private func setState(_ newState: PlaybackState) {
+        state = newState
+        nowPlaying.updatePlaybackState(newState)
+    }
+
+    private func updateNowPlaying() async {
+        guard let bookID = currentBookID,
+              let record = try? libraryStore.book(id: bookID),
+              let currentChunk else { return }
+        let sections = (try? await indexStore.sections(bookID: bookID).sorted { $0.ordinal < $1.ordinal }) ?? []
+        let sectionIndex = sections.firstIndex(where: { $0.id == currentChunk.sectionID })
+        let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
+        nowPlaying.update(
+            NowPlayingSnapshot(
+                title: record.title,
+                artist: record.author,
+                chapterTitle: sectionIndex.map { sections[$0].title } ?? nil,
+                chapterNumber: sectionIndex.map { $0 + 1 },
+                artworkData: nil,
+                estimatedDuration: Double(record.indexedWordCount) / wordsPerSecond,
+                elapsedTime: Double(currentNormalizedWordOffset) / wordsPerSecond,
+                playbackRate: state == .playing ? record.narrationRate : 0
+            )
+        )
+    }
+
+    private func observeNarrationEvents() {
+        let events = engine.events
+        narrationEventTask = Task { [weak self] in
+            for await event in events {
+                guard !Task.isCancelled else { return }
+                await self?.handle(event)
+            }
+        }
+    }
+
+    private func observeIndexingUpdates() {
+        let updates = indexingCoordinator.updates
+        indexingUpdateTask = Task { [weak self] in
+            for await update in updates {
+                guard !Task.isCancelled else { return }
+                await self?.resumeAfterIndexUpdate(update)
+            }
+        }
+    }
+
+    private func installRemoteCommands() {
+        nowPlaying.installRemoteCommands(
+            NowPlayingHandlers(
+                play: { [weak self] in
+                    guard let self, let bookID = self.currentBookID else { return }
+                    Task { await self.play(bookID: bookID) }
+                },
+                pause: { [weak self] in self?.pause() },
+                toggle: { [weak self] in
+                    guard let self else { return }
+                    if self.state == .playing { self.pause() } else { self.resume() }
+                },
+                nextChapter: { [weak self] in Task { await self?.nextChapter() } },
+                previousChapter: { [weak self] in Task { await self?.previousChapter() } },
+                skipForward: { [weak self] in Task { await self?.seek(by: 15) } },
+                skipBackward: { [weak self] in Task { await self?.seek(by: -15) } },
+                changePosition: { [weak self] seconds in
+                    guard let self else { return }
+                    let delta = seconds - (self.nowPlayingElapsedTime())
+                    Task { await self.seek(by: delta) }
+                }
+            )
+        )
+    }
+
+    private func nowPlayingElapsedTime() -> TimeInterval {
+        guard let bookID = currentBookID,
+              let record = try? libraryStore.book(id: bookID) else { return 0 }
+        return Double(currentNormalizedWordOffset) / (2.5 * max(0.5, min(record.narrationRate, 2)))
+    }
+}

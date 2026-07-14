@@ -6,7 +6,12 @@ public final class SystemNarrationEngine: NarrationEngine {
     private let driver: any SpeechSynthesizerDriving
     private let eventStream: AsyncStream<NarrationEvent>
     private let eventContinuation: AsyncStream<NarrationEvent>.Continuation
-    private var chunkIDsByUtteranceID: [UUID: UUID] = [:]
+    private struct UtteranceContext {
+        let chunkID: UUID
+        let utf16BaseOffset: Int
+    }
+
+    private var contextsByUtteranceID: [UUID: UtteranceContext] = [:]
 
     public var voices: [NarrationVoice] {
         driver.installedVoices
@@ -40,11 +45,15 @@ public final class SystemNarrationEngine: NarrationEngine {
         }
 
         let utteranceID = UUID()
-        chunkIDsByUtteranceID[utteranceID] = request.chunk.id
+        let clampedOffset = min(max(0, request.startUTF16Offset), request.chunk.text.utf16.count)
+        contextsByUtteranceID[utteranceID] = UtteranceContext(
+            chunkID: request.chunk.id,
+            utf16BaseOffset: clampedOffset
+        )
         driver.speak(
             SpeechUtteranceSpec(
                 id: utteranceID,
-                text: request.chunk.text,
+                text: (request.chunk.text as NSString).substring(from: clampedOffset),
                 rate: request.rate,
                 voiceIdentifier: voiceIdentifier
             )
@@ -91,8 +100,12 @@ extension SystemNarrationEngine: SpeechSynthesizerDriverDelegate {
     }
 
     func speechSynthesizerWillSpeak(range: NSRange, utteranceID: UUID) {
-        guard let chunkID = chunkIDsByUtteranceID[utteranceID] else { return }
-        eventContinuation.yield(.willSpeakRange(chunkID: chunkID, range: range))
+        guard let context = contextsByUtteranceID[utteranceID] else { return }
+        let sourceRange = NSRange(
+            location: context.utf16BaseOffset + range.location,
+            length: range.length
+        )
+        eventContinuation.yield(.willSpeakRange(chunkID: context.chunkID, range: sourceRange))
     }
 
     func speechSynthesizerDidPause(utteranceID: UUID) {
@@ -105,20 +118,20 @@ extension SystemNarrationEngine: SpeechSynthesizerDriverDelegate {
 
     func speechSynthesizerDidFinish(utteranceID: UUID) {
         emit({ .finished(chunkID: $0) }, utteranceID: utteranceID)
-        chunkIDsByUtteranceID.removeValue(forKey: utteranceID)
+        contextsByUtteranceID.removeValue(forKey: utteranceID)
     }
 
     func speechSynthesizerDidCancel(utteranceID: UUID) {
         emit({ .cancelled(chunkID: $0) }, utteranceID: utteranceID)
-        chunkIDsByUtteranceID.removeValue(forKey: utteranceID)
+        contextsByUtteranceID.removeValue(forKey: utteranceID)
     }
 
     private func emit(
         _ event: (UUID) -> NarrationEvent,
         utteranceID: UUID
     ) {
-        guard let chunkID = chunkIDsByUtteranceID[utteranceID] else { return }
-        eventContinuation.yield(event(chunkID))
+        guard let context = contextsByUtteranceID[utteranceID] else { return }
+        eventContinuation.yield(event(context.chunkID))
     }
 }
 

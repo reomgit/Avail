@@ -61,6 +61,20 @@ final class SystemNarrationEngineTests: XCTestCase {
         XCTAssertEqual(driver.spoken.last?.rate, 0.51)
     }
 
+    func testStartOffsetSpeaksSuffixAndMapsDelegateRangeBackToOriginalChunk() async {
+        let driver = FakeSpeechSynthesizerDriver(voices: Self.voices)
+        let engine = SystemNarrationEngine(driver: driver)
+        var events = engine.events.makeAsyncIterator()
+
+        engine.speak(NarrationRequest(chunk: Self.chunk, rate: 0.5, startUTF16Offset: 7))
+        let utteranceID = try! XCTUnwrap(driver.spoken.last?.id)
+        driver.emitRange(NSRange(location: 0, length: 2), utteranceID: utteranceID)
+
+        XCTAssertEqual(driver.spoken.last?.text, (Self.chunk.text as NSString).substring(from: 7))
+        let event = await events.next()
+        XCTAssertEqual(event, .willSpeakRange(chunkID: Self.chunk.id, range: NSRange(location: 7, length: 2)))
+    }
+
     func testPauseResumeAndStopForwardToRetainedSynthesizer() {
         var driver: FakeSpeechSynthesizerDriver? = FakeSpeechSynthesizerDriver(voices: Self.voices)
         weak let retainedDriver = driver

@@ -2,12 +2,25 @@ import AvailCore
 import Foundation
 import Observation
 
+struct IndexingUpdate: Sendable {
+    let bookID: UUID
+    let progress: IndexingProgress
+}
+
+@MainActor
+protocol IndexingPrioritizing: AnyObject {
+    var updates: AsyncStream<IndexingUpdate> { get }
+    func prioritize(bookID: UUID, after locator: SourceLocator?)
+}
+
 @MainActor
 @Observable
-final class IndexingCoordinator {
+final class IndexingCoordinator: IndexingPrioritizing {
     private let libraryStore: LibraryStore
     private let indexStore: ReadingIndexStore
     private let indexerFactory: any IndexerProviding
+    private let updateStream: AsyncStream<IndexingUpdate>
+    private let updateContinuation: AsyncStream<IndexingUpdate>.Continuation
     private var tasks: [UUID: Task<Void, Never>] = [:]
     private(set) var progressByBookID: [UUID: IndexingProgress] = [:]
 
@@ -19,7 +32,10 @@ final class IndexingCoordinator {
         self.libraryStore = libraryStore
         self.indexStore = indexStore
         self.indexerFactory = indexerFactory
+        (updateStream, updateContinuation) = AsyncStream.makeStream(of: IndexingUpdate.self)
     }
+
+    var updates: AsyncStream<IndexingUpdate> { updateStream }
 
     func progress(for bookID: UUID) -> IndexingProgress? {
         progressByBookID[bookID]
@@ -31,7 +47,7 @@ final class IndexingCoordinator {
             guard let record = try libraryStore.book(id: bookID) else { throw LibraryError.missingRecord }
             let access = try libraryStore.accessBookFile(bookID: bookID)
             let indexer = indexerFactory.indexer(for: record.format)
-            progressByBookID[bookID] = IndexingProgress(phase: .readingMetadata)
+            setProgress(IndexingProgress(phase: .readingMetadata), bookID: bookID)
             tasks[bookID] = Task { [weak self] in
                 guard let self else { return }
                 await self.run(bookID: bookID, access: access, indexer: indexer)
@@ -72,11 +88,11 @@ final class IndexingCoordinator {
         do {
             let recovered = try await indexStore.recover(bookID: bookID)
             try libraryStore.applyIndexManifest(recovered, bookID: bookID)
-            progressByBookID[bookID] = progress(
+            setProgress(progress(
                 from: recovered,
                 completedSourceUnits: 0,
                 phase: recovered.indexedWordCount >= 450 ? .playable : .indexing
-            )
+            ), bookID: bookID)
 
             var completedSourceUnits = 0
             let stream = indexer.events(
@@ -94,22 +110,22 @@ final class IndexingCoordinator {
                     let committed = try await indexStore.manifest(bookID: bookID)
                     if batch.resumeLocator.completesSourceUnit { completedSourceUnits += 1 }
                     try libraryStore.applyIndexManifest(committed, bookID: bookID)
-                    progressByBookID[bookID] = progress(
+                    setProgress(progress(
                         from: committed,
                         completedSourceUnits: completedSourceUnits,
                         phase: committed.indexedWordCount >= 450 ? .playable : .indexing
-                    )
+                    ), bookID: bookID)
                 case let .completed(totalWords, sectionCount):
                     try await indexStore.markComplete(bookID: bookID)
                     let completed = try await indexStore.manifest(bookID: bookID)
                     try libraryStore.applyIndexManifest(completed, bookID: bookID)
-                    progressByBookID[bookID] = IndexingProgress(
+                    setProgress(IndexingProgress(
                         phase: .complete,
                         completedSourceUnits: sectionCount,
                         totalSourceUnits: sectionCount,
                         indexedWordCount: max(totalWords, completed.indexedWordCount),
                         playableFrontier: completed.playableFrontier
-                    )
+                    ), bookID: bookID)
                 }
             }
         } catch is CancellationError {
@@ -138,7 +154,12 @@ final class IndexingCoordinator {
         var current = progressByBookID[bookID] ?? IndexingProgress()
         current.phase = .failed
         current.errorDescription = description
-        progressByBookID[bookID] = current
+        setProgress(current, bookID: bookID)
+    }
+
+    private func setProgress(_ progress: IndexingProgress, bookID: UUID) {
+        progressByBookID[bookID] = progress
+        updateContinuation.yield(IndexingUpdate(bookID: bookID, progress: progress))
     }
 }
 

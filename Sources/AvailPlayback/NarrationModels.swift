@@ -30,17 +30,20 @@ public struct NarrationRequest: Hashable, Sendable {
     public let voiceIdentifier: String?
     public let languageCode: String?
     public let rate: Float
+    public let startUTF16Offset: Int
 
     public init(
         chunk: SpeechChunk,
         voiceIdentifier: String? = nil,
         languageCode: String? = nil,
-        rate: Float = 0.5
+        rate: Float = 0.5,
+        startUTF16Offset: Int = 0
     ) {
         self.chunk = chunk
         self.voiceIdentifier = voiceIdentifier
         self.languageCode = languageCode
         self.rate = rate
+        self.startUTF16Offset = startUTF16Offset
     }
 }
 

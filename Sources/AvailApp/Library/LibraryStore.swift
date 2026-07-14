@@ -92,6 +92,19 @@ final class LibraryStore {
         try context.save()
     }
 
+    func savePlaybackPosition(_ position: ReadingPosition) throws {
+        guard let record = try book(id: position.bookID) else { throw LibraryError.missingRecord }
+        record.update(position: position)
+        try context.save()
+    }
+
+    func saveVoiceIdentifier(_ voiceIdentifier: String?, bookID: UUID) throws {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        record.voiceIdentifier = voiceIdentifier
+        record.updatedAt = Date()
+        try context.save()
+    }
+
     func importBook(from source: URL) async throws -> LibraryImportResult {
         let format = try format(for: source)
         let access = try locationStore.beginAccess()
