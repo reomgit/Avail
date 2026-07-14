@@ -8,11 +8,17 @@ struct AvailApp: App {
         WindowGroup("Avail") {
             RootView()
                 .environment(environment)
+                .modelContainer(environment.modelContainer)
+        }
+        .commands {
+            LibraryCommands()
+            ToolbarCommands()
         }
 
         Settings {
             SettingsRootView()
                 .environment(environment)
+                .modelContainer(environment.modelContainer)
         }
     }
 }
