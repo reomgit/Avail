@@ -8,14 +8,20 @@ public enum BookFormat: String, Codable, CaseIterable, Sendable {
 
 public enum SourceLocator: Codable, Hashable, Sendable {
     case epub(spineIndex: Int, href: String)
+    case epubProgress(spineIndex: Int, href: String, nextChunkOrdinal: Int)
     case pdf(pageIndex: Int)
+    case pdfProgress(pageIndex: Int, nextChunkOrdinal: Int)
 
     public var stableKey: String {
         switch self {
         case let .epub(spineIndex, href):
             "epub:\(spineIndex):\(href)"
+        case let .epubProgress(spineIndex, href, nextChunkOrdinal):
+            "epub-progress:\(spineIndex):\(href):\(nextChunkOrdinal)"
         case let .pdf(pageIndex):
             "pdf:\(pageIndex)"
+        case let .pdfProgress(pageIndex, nextChunkOrdinal):
+            "pdf-progress:\(pageIndex):\(nextChunkOrdinal)"
         }
     }
 }
