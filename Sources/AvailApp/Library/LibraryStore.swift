@@ -12,6 +12,16 @@ enum LibraryRemovalMode {
     case moveFileToTrash
 }
 
+final class LibraryBookAccess {
+    let url: URL
+    private let lease: LibraryAccessLease
+
+    init(url: URL, lease: LibraryAccessLease) {
+        self.url = url
+        self.lease = lease
+    }
+}
+
 @MainActor
 final class LibraryStore {
     typealias TrashHandler = @MainActor (URL) throws -> Void
@@ -41,6 +51,45 @@ final class LibraryStore {
 
     func book(id: UUID) throws -> LibraryBookRecord? {
         try books().first(where: { $0.id == id })
+    }
+
+    func accessBookFile(bookID: UUID) throws -> LibraryBookAccess {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        let lease = try locationStore.beginAccess()
+        let url = lease.url.appending(path: record.relativePath)
+        guard FileManager.default.fileExists(atPath: url.path) else {
+            record.state = .missing
+            try context.save()
+            throw LibraryError.sourceUnreadable
+        }
+        return LibraryBookAccess(url: url, lease: lease)
+    }
+
+    func applyMetadata(_ metadata: BookMetadata, bookID: UUID) throws {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        record.title = metadata.title
+        record.author = metadata.authors.first
+        record.languageCode = metadata.languageCode
+        record.updatedAt = Date()
+        try context.save()
+    }
+
+    func applyIndexManifest(_ manifest: IndexManifest, bookID: UUID) throws {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        record.indexedWordCount = manifest.indexedWordCount
+        record.isIndexComplete = manifest.isComplete
+        record.state = manifest.isComplete ? .ready : .indexing
+        record.lastErrorDescription = nil
+        record.updatedAt = Date()
+        try context.save()
+    }
+
+    func markIndexingFailure(bookID: UUID, description: String) throws {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        record.state = .failed
+        record.lastErrorDescription = description
+        record.updatedAt = Date()
+        try context.save()
     }
 
     func importBook(from source: URL) async throws -> LibraryImportResult {

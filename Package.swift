@@ -17,7 +17,7 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "AvailApp",
-            dependencies: ["AvailCore"],
+            dependencies: ["AvailCore", "AvailEPUB", "AvailPDF"],
             resources: [.process("Resources")]
         ),
         .target(name: "AvailCore"),
