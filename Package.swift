@@ -8,6 +8,7 @@ let package = Package(
         .executable(name: "Avail", targets: ["AvailApp"]),
         .library(name: "AvailCore", targets: ["AvailCore"]),
         .library(name: "AvailEPUB", targets: ["AvailEPUB"]),
+        .library(name: "AvailPDF", targets: ["AvailPDF"]),
     ],
     dependencies: [
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.20"),
@@ -28,6 +29,10 @@ let package = Package(
                 .product(name: "SwiftSoup", package: "SwiftSoup"),
             ]
         ),
+        .target(
+            name: "AvailPDF",
+            dependencies: ["AvailCore"]
+        ),
         .testTarget(
             name: "AvailAppTests",
             dependencies: ["AvailApp"]
@@ -43,6 +48,10 @@ let package = Package(
                 "AvailEPUB",
                 .product(name: "ZIPFoundation", package: "ZIPFoundation"),
             ]
+        ),
+        .testTarget(
+            name: "AvailPDFTests",
+            dependencies: ["AvailCore", "AvailPDF"]
         ),
     ]
 )
