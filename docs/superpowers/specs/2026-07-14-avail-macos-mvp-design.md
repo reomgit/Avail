@@ -36,6 +36,19 @@ Opening a book uses the approved Option B layout without redesign:
 
 The MVP offers speed from 0.5× to 2.0× and installed system voices compatible with the book language. Voice and speed are saved per book. Remaining time is explicitly an estimate recalculated from indexed word count, selected rate, and current normalized position.
 
+### UI design language and documentation policy
+
+Apple's current Human Interface Guidelines and official SwiftUI documentation are the source of truth for every UI decision. Before adding or changing a SwiftUI API, macOS interaction pattern, navigation structure, window behavior, control, accessibility behavior, or visual treatment, use Context7 to resolve and query the official Apple documentation libraries. Prefer `/websites/developer_apple_swiftui` and `/websites/developer_apple_design_human-interface-guidelines`; if Context7 lacks the required page, consult the current official Apple Developer documentation and record the fallback in the implementation notes.
+
+- Build the library with `NavigationSplitView` and the approved Zen view with native split/inspector patterns. Use SwiftUI scene and window APIs for restoration, resizing, commands, and focused values; add AppKit interop only when SwiftUI cannot provide required macOS behavior.
+- Prefer standard SwiftUI controls, toolbars, menus, commands, sheets, alerts, focus behavior, and keyboard conventions. A custom playback control must retain native hit targets, focus rings, keyboard activation, accessibility roles/values/actions, and enabled/disabled behavior.
+- Use semantic system colors and materials so appearance, contrast, accent color, Increase Contrast, and light/dark mode adapt automatically. Do not hard-code a proprietary theme for the MVP.
+- Use system typography: the platform default for interface chrome and the system serif design for long-form book content. Respect user font-size controls, window resizing, text reflow, localization expansion, and legibility; never encode text as imagery.
+- Support Full Keyboard Access, VoiceOver, Reduce Motion, Reduce Transparency, and differentiate-without-color. Spoken-range highlighting must remain understandable with color disabled and must not trigger forced scrolling when Reduce Motion or follow mode is off.
+- Keep platform behavior recognizable: familiar sidebar selection, toolbar placement, inspector hierarchy, menu commands, undoable/destructive action treatment, and clear window titles. Visual novelty may refine hierarchy but never replace established macOS behavior.
+
+Each UI pull request must identify the relevant Context7/Apple guidance in its description and include accessibility plus light/dark appearance verification. The implementation plan and code review checklist enforce this policy for the lifetime of the project.
+
 ## Architecture and interfaces
 
 Use a native, normalized reading index as the boundary between document formats, rendering, persistence, and narration.
