@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-test-package:
+    runs-on: macos-26
+    timeout-minutes: 45
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Record toolchain
+        run: |
+          sw_vers
+          xcodebuild -version
+          swift --version
+
+      - name: Resolve dependencies
+        run: swift package resolve
+
+      - name: Check Swift formatting
+        run: swift format lint --strict --recursive --parallel --configuration .swift-format Sources Tests
+
+      - name: Run tests
+        run: swift test --parallel
+
+      - name: Build release executable
+        run: swift build -c release
+
+      - name: Package and verify app
+        run: |
+          bash Scripts/package-app.sh --clean
+          bash Scripts/verify-app.sh

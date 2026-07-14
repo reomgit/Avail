@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write
+
+jobs:
+  notarized-release:
+    runs-on: macos-26
+    timeout-minutes: 60
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate release version
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          PLIST_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Packaging/Info.plist)"
+          test "${VERSION}" = "${PLIST_VERSION}"
+
+      - name: Import Developer ID certificate
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ github.run_id }}-${{ github.run_attempt }}
+        run: |
+          CERTIFICATE_PATH="${RUNNER_TEMP}/developer-id.p12"
+          KEYCHAIN_PATH="${RUNNER_TEMP}/avail-signing.keychain-db"
+          printf '%s' "${CERTIFICATE_BASE64}" | base64 -D > "${CERTIFICATE_PATH}"
+          security create-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security set-keychain-settings -lut 21600 "${KEYCHAIN_PATH}"
+          security unlock-keychain -p "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+          security import "${CERTIFICATE_PATH}" -P "${CERTIFICATE_PASSWORD}" -A -t cert -f pkcs12 -k "${KEYCHAIN_PATH}"
+          security list-keychains -d user -s "${KEYCHAIN_PATH}"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "${KEYCHAIN_PASSWORD}" "${KEYCHAIN_PATH}"
+
+      - name: Build signed universal app
+        env:
+          DEVELOPER_ID_APPLICATION: ${{ secrets.DEVELOPER_ID_APPLICATION }}
+          VERSION: ${{ github.ref_name }}
+          BUILD_NUMBER: ${{ github.run_number }}
+        run: |
+          VERSION="${VERSION#v}" bash Scripts/package-app.sh --arch universal --clean
+          bash Scripts/verify-app.sh
+
+      - name: Prepare App Store Connect API key
+        env:
+          PRIVATE_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64 }}
+          KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+        run: |
+          KEY_PATH="${RUNNER_TEMP}/AuthKey_${KEY_ID}.p8"
+          printf '%s' "${PRIVATE_KEY_BASE64}" | base64 -D > "${KEY_PATH}"
+          chmod 600 "${KEY_PATH}"
+          echo "APP_STORE_CONNECT_API_PRIVATE_KEY=${KEY_PATH}" >> "${GITHUB_ENV}"
+
+      - name: Notarize and staple
+        env:
+          APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
+          APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
+        run: bash Scripts/notarize.sh
+
+      - name: Assemble release artifacts
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          rm -f dist/Avail-notarization.zip
+          ditto -c -k --keepParent dist/Avail.app "dist/Avail-${VERSION}-universal.zip"
+          zip -j "dist/Avail-${VERSION}-licenses.zip" LICENSE Packaging/THIRD_PARTY_NOTICES.md
+          (cd dist && shasum -a 256 ./*.zip > SHA256SUMS.txt)
+
+      - name: Publish GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          gh release create "${GITHUB_REF_NAME}" \
+            "dist/Avail-${VERSION}-universal.zip" \
+            "dist/Avail-${VERSION}-licenses.zip" \
+            "dist/SHA256SUMS.txt" \
+            --generate-notes \
+            --title "Avail ${VERSION}"
+
+      - name: Delete temporary keychain
+        if: always()
+        run: security delete-keychain "${RUNNER_TEMP}/avail-signing.keychain-db" || true

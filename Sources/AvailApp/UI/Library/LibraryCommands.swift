@@ -33,8 +33,8 @@ struct LibraryCommands: Commands {
             Button("Play or Pause") {
                 if let zenActions { zenActions.togglePlayback() } else { actions?.togglePlayback() }
             }
-                .keyboardShortcut(.space, modifiers: [])
-                .disabled(zenActions == nil && actions?.canPlay != true)
+            .keyboardShortcut(.space, modifiers: [])
+            .disabled(zenActions == nil && actions?.canPlay != true)
             Button("Open Zen") { actions?.openZen() }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .disabled(actions?.canOpenZen != true)

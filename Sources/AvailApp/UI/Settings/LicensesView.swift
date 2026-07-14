@@ -12,12 +12,12 @@ struct LicensesView: View {
                 dependency(
                     "ZIPFoundation",
                     url: "https://github.com/weichsel/ZIPFoundation",
-                    notice: "Copyright © 2017-2024 Thomas Zoechling and contributors — MIT License"
+                    notice: "Copyright © 2017–2025 Thomas Zoechling and contributors — MIT License"
                 )
                 dependency(
                     "SwiftSoup",
                     url: "https://github.com/scinfu/SwiftSoup",
-                    notice: "Copyright © 2016-2026 SwiftSoup contributors — MIT License"
+                    notice: "Copyright © 2009–2025 Jonathan Hedley; © 2016–2025 Nabil Chatbi — MIT License"
                 )
             }
             Section {

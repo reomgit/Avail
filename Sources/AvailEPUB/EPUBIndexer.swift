@@ -51,12 +51,14 @@ public struct EPUBIndexer: DocumentIndexer {
         let coverData = try package.coverPath.flatMap { path in
             try archive.data(at: path, maximumSize: 20 * 1_024 * 1_024)
         }
-        continuation.yield(.metadata(BookMetadata(
-            title: package.title ?? fileURL.deletingPathExtension().lastPathComponent,
-            authors: package.authors,
-            languageCode: package.languageCode,
-            coverData: coverData
-        )))
+        continuation.yield(
+            .metadata(
+                BookMetadata(
+                    title: package.title ?? fileURL.deletingPathExtension().lastPathComponent,
+                    authors: package.authors,
+                    languageCode: package.languageCode,
+                    coverData: coverData
+                )))
 
         let resume = ResumePoint(locator: resumeAfter)
         let contentParser = EPUBContentParser()
@@ -91,15 +93,18 @@ public struct EPUBIndexer: DocumentIndexer {
                 try Task.checkCancellation()
                 let sliceEnd = min(sliceStart + 50, chunks.count)
                 let sliceIndex = sliceStart / 50
-                let frontier: SourceLocator = sliceEnd == chunks.count
+                let frontier: SourceLocator =
+                    sliceEnd == chunks.count
                     ? locator
                     : .epubProgress(spineIndex: spineIndex, href: item.path, nextChunkOrdinal: sliceEnd)
-                continuation.yield(.batch(IndexBatch(
-                    ordinal: spineIndex * 10_000 + sliceIndex,
-                    sections: sliceStart == 0 ? [section] : [],
-                    chunks: Array(chunks[sliceStart..<sliceEnd]),
-                    resumeLocator: frontier
-                )))
+                continuation.yield(
+                    .batch(
+                        IndexBatch(
+                            ordinal: spineIndex * 10_000 + sliceIndex,
+                            sections: sliceStart == 0 ? [section] : [],
+                            chunks: Array(chunks[sliceStart..<sliceEnd]),
+                            resumeLocator: frontier
+                        )))
                 sliceStart = sliceEnd
             }
         }

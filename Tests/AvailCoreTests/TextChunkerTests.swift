@@ -55,8 +55,9 @@ final class TextChunkerTests: XCTestCase {
 
         XCTAssertGreaterThan(chunks.count, 1)
         XCTAssertTrue(chunks.allSatisfy { $0.text.count <= 2_000 })
-        XCTAssertTrue(chunks.allSatisfy { chunk in
-            chunk.text.split(separator: " ").allSatisfy { $0 == Substring(word) }
-        })
+        XCTAssertTrue(
+            chunks.allSatisfy { chunk in
+                chunk.text.split(separator: " ").allSatisfy { $0 == Substring(word) }
+            })
     }
 }

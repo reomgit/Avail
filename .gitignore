@@ -3,4 +3,5 @@
 .worktrees/
 DerivedData/
 .build/
+dist/
 xcuserdata/

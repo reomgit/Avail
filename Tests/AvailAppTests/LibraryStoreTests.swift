@@ -100,7 +100,8 @@ final class LibraryStoreTests: XCTestCase {
         try Data("keep".utf8).write(to: first)
         try Data("trash".utf8).write(to: second)
         guard case let .created(keepID) = try await store.importBook(from: first),
-              case let .created(trashID) = try await store.importBook(from: second) else {
+            case let .created(trashID) = try await store.importBook(from: second)
+        else {
             return XCTFail("Expected records")
         }
 

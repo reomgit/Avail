@@ -79,15 +79,18 @@ public struct PDFIndexer: DocumentIndexer {
                 try Task.checkCancellation()
                 let sliceEnd = min(sliceStart + 50, chunks.count)
                 let sliceIndex = sliceStart / 50
-                let frontier: SourceLocator = sliceEnd == chunks.count
+                let frontier: SourceLocator =
+                    sliceEnd == chunks.count
                     ? locator
                     : .pdfProgress(pageIndex: pageIndex, nextChunkOrdinal: sliceEnd)
-                continuation.yield(.batch(IndexBatch(
-                    ordinal: pageIndex * 10_000 + sliceIndex,
-                    sections: sliceStart == 0 ? [section] : [],
-                    chunks: Array(chunks[sliceStart..<sliceEnd]),
-                    resumeLocator: frontier
-                )))
+                continuation.yield(
+                    .batch(
+                        IndexBatch(
+                            ordinal: pageIndex * 10_000 + sliceIndex,
+                            sections: sliceStart == 0 ? [section] : [],
+                            chunks: Array(chunks[sliceStart..<sliceEnd]),
+                            resumeLocator: frontier
+                        )))
                 sliceStart = sliceEnd
             }
         }

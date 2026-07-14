@@ -64,15 +64,17 @@ struct ReadingContentView: View {
 
     private func sectionTitle(startingAt chunk: SpeechChunk) -> String? {
         guard let section = model.sections.first(where: { $0.id == chunk.sectionID }),
-              section.chunkIDs.first == chunk.id else { return nil }
+            section.chunkIDs.first == chunk.id
+        else { return nil }
         return section.title
     }
 
     private func attributedText(for chunk: SpeechChunk) -> AttributedString {
         var attributed = AttributedString(chunk.text)
         guard let stringRange = model.highlightedStringRange(in: chunk),
-              let lower = AttributedString.Index(stringRange.lowerBound, within: attributed),
-              let upper = AttributedString.Index(stringRange.upperBound, within: attributed) else {
+            let lower = AttributedString.Index(stringRange.lowerBound, within: attributed),
+            let upper = AttributedString.Index(stringRange.upperBound, within: attributed)
+        else {
             return attributed
         }
         attributed[lower..<upper].backgroundColor = .accentColor.opacity(0.18)

@@ -39,11 +39,15 @@ struct RecoveryPresentation: Equatable {
     init(_ issue: RecoveryIssue) {
         switch issue {
         case .bookmarkReconnect:
-            self.init("Reconnect Library", "macOS can no longer access the folder you previously selected. Choose that folder again to restore access.", "Choose Library Folder…", "externaldrive.badge.questionmark", .reconnectLibrary)
+            self.init(
+                "Reconnect Library", "macOS can no longer access the folder you previously selected. Choose that folder again to restore access.", "Choose Library Folder…",
+                "externaldrive.badge.questionmark", .reconnectLibrary)
         case .unsupportedType:
             self.init("Unsupported Book Type", "Avail currently reads EPUB and PDF files.", "Choose Another File…", "doc.badge.ellipsis", .chooseAnotherFile)
         case .corruptEPUB:
-            self.init("EPUB Could Not Be Read", "The book package is incomplete or damaged. Try a fresh copy from its original source.", "Choose Another File…", "book.closed.trianglebadge.exclamationmark", .chooseAnotherFile)
+            self.init(
+                "EPUB Could Not Be Read", "The book package is incomplete or damaged. Try a fresh copy from its original source.", "Choose Another File…", "book.closed.trianglebadge.exclamationmark",
+                .chooseAnotherFile)
         case .protectedEPUB:
             self.init("Protected EPUB", "This EPUB is encrypted or DRM-protected and can’t be narrated by Avail.", "Choose Another File…", "lock.fill", .chooseAnotherFile)
         case .lockedPDF:
@@ -51,7 +55,9 @@ struct RecoveryPresentation: Equatable {
         case .scannedPDF:
             self.init("No Selectable Text", "This PDF appears to contain scanned page images. OCR is not included in the MVP.", "Choose Another File…", "doc.viewfinder", .chooseAnotherFile)
         case .missingSource:
-            self.init("Book File Is Missing", "The managed book file was moved or deleted outside Avail. Reconnect it or remove the stale entry.", "Remove from Library…", "questionmark.folder", .removeFromLibrary, destructive: true)
+            self.init(
+                "Book File Is Missing", "The managed book file was moved or deleted outside Avail. Reconnect it or remove the stale entry.", "Remove from Library…", "questionmark.folder",
+                .removeFromLibrary, destructive: true)
         case .diskFull:
             self.init("Not Enough Disk Space", "Avail couldn’t finish copying or indexing this book. Free space, then retry.", "Review Storage", "externaldrive.badge.exclamationmark", .freeDiskSpace)
         case .indexInterrupted:
@@ -59,7 +65,9 @@ struct RecoveryPresentation: Equatable {
         case .frontierBuffering:
             self.init("Preparing the Next Passage", "You reached the readable frontier while Avail continues indexing locally.", "Keep Waiting", "hourglass", .waitForIndex)
         case .voiceUnavailable:
-            self.init("Voice Is No Longer Installed", "macOS can’t find the saved voice. Choose another installed voice; your reading position is unchanged.", "Choose Voice", "waveform.badge.exclamationmark", .chooseVoice)
+            self.init(
+                "Voice Is No Longer Installed", "macOS can’t find the saved voice. Choose another installed voice; your reading position is unchanged.", "Choose Voice",
+                "waveform.badge.exclamationmark", .chooseVoice)
         }
     }
 

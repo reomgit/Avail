@@ -8,8 +8,10 @@ struct EPUBContent {
 
 struct EPUBContentParser {
     func parse(data: Data, path: String) throws -> EPUBContent {
-        guard let html = String(data: data, encoding: .utf8)
-            ?? String(data: data, encoding: .utf16) else {
+        guard
+            let html = String(data: data, encoding: .utf8)
+                ?? String(data: data, encoding: .utf16)
+        else {
             throw EPUBError.unreadableContent(path)
         }
 

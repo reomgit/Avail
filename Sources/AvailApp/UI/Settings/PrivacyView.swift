@@ -15,8 +15,10 @@ struct PrivacyView: View {
                 }
             }
             Section("System Integration") {
-                Text("While a book is playing, Avail shares its title, author, chapter, artwork, and playback position with macOS Now Playing so media keys and Control Center work. Avail clears this state when playback ends.")
-                    .foregroundStyle(.secondary)
+                Text(
+                    "While a book is playing, Avail shares its title, author, chapter, artwork, and playback position with macOS Now Playing so media keys and Control Center work. Avail clears this state when playback ends."
+                )
+                .foregroundStyle(.secondary)
             }
             Section("Your Folder") {
                 Text("Avail accesses only the library folder and book files you choose through macOS security-scoped permissions.")

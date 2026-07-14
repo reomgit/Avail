@@ -67,7 +67,7 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
             author: nil,
             language: nil,
             chapters: [
-                ("legacy.xhtml", "<html><body><h2>Legacy Chapter<p>Unclosed but readable &amp; useful."),
+                ("legacy.xhtml", "<html><body><h2>Legacy Chapter<p>Unclosed but readable &amp; useful.")
             ],
             includeNavigation: true
         )
@@ -211,12 +211,17 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
     ) throws -> URL {
         var entries: [(String, Data)] = []
         entries.append(("mimetype", Data("application/epub+zip".utf8)))
-        entries.append(("META-INF/container.xml", Data("""
-        <?xml version="1.0"?>
-        <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
-          <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
-        </container>
-        """.utf8)))
+        entries.append(
+            (
+                "META-INF/container.xml",
+                Data(
+                    """
+                    <?xml version="1.0"?>
+                    <container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+                      <rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+                    </container>
+                    """.utf8)
+            ))
 
         var metadata = ""
         if let title { metadata += "<dc:title>\(title)</dc:title>" }
@@ -239,14 +244,19 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
             entries.append(("OEBPS/Images/cover.jpg", coverData))
         }
 
-        entries.append(("OEBPS/content.opf", Data("""
-        <?xml version="1.0" encoding="UTF-8"?>
-        <package version="\(version)" xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-          <metadata>\(metadata)</metadata>
-          <manifest>\(manifest)</manifest>
-          <spine>\(spine)</spine>
-        </package>
-        """.utf8)))
+        entries.append(
+            (
+                "OEBPS/content.opf",
+                Data(
+                    """
+                    <?xml version="1.0" encoding="UTF-8"?>
+                    <package version="\(version)" xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                      <metadata>\(metadata)</metadata>
+                      <manifest>\(manifest)</manifest>
+                      <spine>\(spine)</spine>
+                    </package>
+                    """.utf8)
+            ))
 
         for chapter in chapters {
             entries.append(("OEBPS/Text/\(chapter.name)", Data("<html><body>\(chapter.html)</body></html>".utf8)))

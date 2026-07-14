@@ -116,7 +116,8 @@ final class PlaybackCoordinator {
 
     func seek(by seconds: TimeInterval) async {
         guard let bookID = currentBookID,
-              let record = try? libraryStore.book(id: bookID) else { return }
+            let record = try? libraryStore.book(id: bookID)
+        else { return }
         let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
         let target = max(0, currentNormalizedWordOffset + Int(seconds * wordsPerSecond))
         await seek(toNormalizedWordOffset: target)
@@ -143,7 +144,8 @@ final class PlaybackCoordinator {
             let sections = try await indexStore.sections(bookID: bookID)
             let chunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
             guard let section = sections.first(where: { $0.id == sectionID }),
-                  let chunk = section.chunkIDs.compactMap({ id in chunks.first(where: { $0.id == id }) }).first else {
+                let chunk = section.chunkIDs.compactMap({ id in chunks.first(where: { $0.id == id }) }).first
+            else {
                 return
             }
             try await move(to: chunk, requestedWordOffset: nil, stopFirst: true)
@@ -184,7 +186,8 @@ final class PlaybackCoordinator {
         }
 
         if let saved = record.readingPosition(),
-           let exactIndex = allChunks.firstIndex(where: { $0.id == saved.chunkID }) {
+            let exactIndex = allChunks.firstIndex(where: { $0.id == saved.chunkID })
+        {
             let globalStart = allChunks[..<exactIndex].reduce(0) { $0 + $1.wordCount }
             configureCurrent(
                 chunks: Array(allChunks[exactIndex..<min(exactIndex + 2, allChunks.count)]),
@@ -197,7 +200,8 @@ final class PlaybackCoordinator {
 
         let requestedOffset = record.readingPosition()?.normalizedWordOffset ?? 0
         guard let fallback = try await indexStore.position(bookID: record.id, normalizedWordOffset: requestedOffset),
-              let fallbackIndex = allChunks.firstIndex(where: { $0.id == fallback.chunk.id }) else {
+            let fallbackIndex = allChunks.firstIndex(where: { $0.id == fallback.chunk.id })
+        else {
             currentChunk = nil
             queuedChunks = []
             return
@@ -225,8 +229,9 @@ final class PlaybackCoordinator {
 
     private func speakCurrentChunk() {
         guard let currentChunk,
-              let bookID = currentBookID,
-              let record = try? libraryStore.book(id: bookID) else { return }
+            let bookID = currentBookID,
+            let record = try? libraryStore.book(id: bookID)
+        else { return }
         let rate = Float(0.5 * max(0.5, min(record.narrationRate, 2)))
         engine.speak(
             NarrationRequest(
@@ -245,7 +250,8 @@ final class PlaybackCoordinator {
         do {
             let allChunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
             if let currentIndex = allChunks.firstIndex(where: { $0.id == currentChunk.id }),
-               allChunks.indices.contains(currentIndex + 1) {
+                allChunks.indices.contains(currentIndex + 1)
+            {
                 let next = allChunks[currentIndex + 1]
                 try await move(to: next, requestedWordOffset: currentChunkGlobalWordOffset + currentChunk.wordCount, stopFirst: false)
                 return
@@ -307,8 +313,9 @@ final class PlaybackCoordinator {
 
     private func resumeAfterIndexUpdate(_ update: IndexingUpdate) async {
         guard state == .bufferingForIndex,
-              update.bookID == currentBookID,
-              update.progress.phase != .failed else { return }
+            update.bookID == currentBookID,
+            update.progress.phase != .failed
+        else { return }
         await advanceAfterFinishedChunk()
     }
 
@@ -323,10 +330,12 @@ final class PlaybackCoordinator {
             highlightedChunkID = chunkID
             highlightRange = range
             currentUTF16Offset = range.location
-            currentNormalizedWordOffset = currentChunkGlobalWordOffset + wordCount(
-                beforeUTF16Offset: range.location,
-                in: currentChunk.text
-            )
+            currentNormalizedWordOffset =
+                currentChunkGlobalWordOffset
+                + wordCount(
+                    beforeUTF16Offset: range.location,
+                    in: currentChunk.text
+                )
             if let position = currentPosition() { persistence.schedule(position) }
             await updateNowPlaying()
         case .paused:
@@ -382,8 +391,9 @@ final class PlaybackCoordinator {
 
     private func updateNowPlaying() async {
         guard let bookID = currentBookID,
-              let record = try? libraryStore.book(id: bookID),
-              let currentChunk else { return }
+            let record = try? libraryStore.book(id: bookID),
+            let currentChunk
+        else { return }
         let sections = (try? await indexStore.sections(bookID: bookID).sorted { $0.ordinal < $1.ordinal }) ?? []
         let sectionIndex = sections.firstIndex(where: { $0.id == currentChunk.sectionID })
         let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
@@ -448,7 +458,8 @@ final class PlaybackCoordinator {
 
     private func nowPlayingElapsedTime() -> TimeInterval {
         guard let bookID = currentBookID,
-              let record = try? libraryStore.book(id: bookID) else { return 0 }
+            let record = try? libraryStore.book(id: bookID)
+        else { return 0 }
         return Double(currentNormalizedWordOffset) / (2.5 * max(0.5, min(record.narrationRate, 2)))
     }
 }

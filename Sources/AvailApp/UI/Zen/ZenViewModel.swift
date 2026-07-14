@@ -83,10 +83,11 @@ final class ZenViewModel {
 
     func highlightedStringRange(in chunk: SpeechChunk) -> Range<String.Index>? {
         guard playback.highlightedChunkID == chunk.id,
-              let range = playback.highlightRange,
-              range.location >= 0,
-              range.length >= 0,
-              range.location + range.length <= chunk.text.utf16.count else { return nil }
+            let range = playback.highlightRange,
+            range.location >= 0,
+            range.length >= 0,
+            range.location + range.length <= chunk.text.utf16.count
+        else { return nil }
         return Range(range, in: chunk.text)
     }
 
@@ -107,7 +108,8 @@ final class ZenViewModel {
 
     func requestFollowScroll(reduceMotion: Bool) {
         guard isFollowingNarration,
-              let chunkID = playback.highlightedChunkID ?? playback.currentChunk?.id else { return }
+            let chunkID = playback.highlightedChunkID ?? playback.currentChunk?.id
+        else { return }
         scrollRequest = ZenScrollRequest(id: UUID(), chunkID: chunkID, animated: !reduceMotion)
     }
 

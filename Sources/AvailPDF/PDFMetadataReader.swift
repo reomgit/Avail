@@ -9,7 +9,8 @@ struct PDFMetadataReader {
             .trimmingCharacters(in: .whitespacesAndNewlines)
         let author = (attributes[PDFDocumentAttribute.authorAttribute] as? String)?
             .trimmingCharacters(in: .whitespacesAndNewlines)
-        let resolvedTitle = title.flatMap { $0.isEmpty ? nil : $0 }
+        let resolvedTitle =
+            title.flatMap { $0.isEmpty ? nil : $0 }
             ?? fileURL.deletingPathExtension().lastPathComponent
         let resolvedAuthors = author.flatMap { $0.isEmpty ? nil : $0 }.map { [$0] } ?? []
         return BookMetadata(

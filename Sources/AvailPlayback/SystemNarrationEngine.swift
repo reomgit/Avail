@@ -35,7 +35,8 @@ public final class SystemNarrationEngine: NarrationEngine {
     public func speak(_ request: NarrationRequest) {
         let voiceIdentifier = selectedVoiceIdentifier(for: request)
         if let requestedIdentifier = request.voiceIdentifier,
-           !voices.contains(where: { $0.id == requestedIdentifier }) {
+            !voices.contains(where: { $0.id == requestedIdentifier })
+        {
             eventContinuation.yield(
                 .voiceFallback(
                     requestedIdentifier: requestedIdentifier,
@@ -74,7 +75,8 @@ public final class SystemNarrationEngine: NarrationEngine {
 
     private func selectedVoiceIdentifier(for request: NarrationRequest) -> String? {
         if let requestedIdentifier = request.voiceIdentifier,
-           voices.contains(where: { $0.id == requestedIdentifier }) {
+            voices.contains(where: { $0.id == requestedIdentifier })
+        {
             return requestedIdentifier
         }
 

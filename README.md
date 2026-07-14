@@ -28,10 +28,29 @@ Avail has no production networking or analytics client. During active playback o
 
 ```bash
 swift build
-swift test
+swift test --parallel
 ```
 
 The app uses only Apple platform frameworks plus [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) and [SwiftSoup](https://github.com/scinfu/SwiftSoup), both under the MIT License.
+
+To assemble the sandboxed macOS app bundle used by releases:
+
+```bash
+bash Scripts/package-app.sh --clean
+bash Scripts/verify-app.sh
+open dist/Avail.app
+```
+
+Contributor packages are ad hoc signed. Public releases are universal, Developer ID signed, hardened, notarized, and stapled through the documented GitHub Actions workflow. See [Releasing Avail](docs/releasing.md) for credentials, commands, and artifact validation.
+
+## MVP Limits
+
+- PDFs must contain selectable text; OCR is not included yet.
+- DRM-protected or encrypted EPUBs are rejected.
+- The first narration provider uses voices installed by macOS through a pluggable local `NarrationEngine`; downloadable local neural-model providers are a post-MVP extension point.
+- Avail currently targets macOS only.
+
+Complete dependency notices are in [Third-Party Notices](Packaging/THIRD_PARTY_NOTICES.md) and are copied into every packaged app.
 
 ## License
 

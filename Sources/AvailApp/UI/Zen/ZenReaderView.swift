@@ -23,8 +23,9 @@ struct ZenReaderView: View {
         .navigationTitle(model?.book?.title ?? "Zen")
         .task(id: bookID) {
             guard let libraryStore = environment.libraryStore,
-                  let indexStore = environment.indexStore,
-                  let playback = environment.playbackCoordinator else { return }
+                let indexStore = environment.indexStore,
+                let playback = environment.playbackCoordinator
+            else { return }
             let created = ZenViewModel(
                 bookID: bookID,
                 libraryStore: libraryStore,

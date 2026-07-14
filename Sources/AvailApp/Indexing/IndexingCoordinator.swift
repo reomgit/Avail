@@ -88,11 +88,12 @@ final class IndexingCoordinator: IndexingPrioritizing {
         do {
             let recovered = try await indexStore.recover(bookID: bookID)
             try libraryStore.applyIndexManifest(recovered, bookID: bookID)
-            setProgress(progress(
-                from: recovered,
-                completedSourceUnits: 0,
-                phase: recovered.indexedWordCount >= 450 ? .playable : .indexing
-            ), bookID: bookID)
+            setProgress(
+                progress(
+                    from: recovered,
+                    completedSourceUnits: 0,
+                    phase: recovered.indexedWordCount >= 450 ? .playable : .indexing
+                ), bookID: bookID)
 
             var completedSourceUnits = 0
             let stream = indexer.events(
@@ -110,22 +111,24 @@ final class IndexingCoordinator: IndexingPrioritizing {
                     let committed = try await indexStore.manifest(bookID: bookID)
                     if batch.resumeLocator.completesSourceUnit { completedSourceUnits += 1 }
                     try libraryStore.applyIndexManifest(committed, bookID: bookID)
-                    setProgress(progress(
-                        from: committed,
-                        completedSourceUnits: completedSourceUnits,
-                        phase: committed.indexedWordCount >= 450 ? .playable : .indexing
-                    ), bookID: bookID)
+                    setProgress(
+                        progress(
+                            from: committed,
+                            completedSourceUnits: completedSourceUnits,
+                            phase: committed.indexedWordCount >= 450 ? .playable : .indexing
+                        ), bookID: bookID)
                 case let .completed(totalWords, sectionCount):
                     try await indexStore.markComplete(bookID: bookID)
                     let completed = try await indexStore.manifest(bookID: bookID)
                     try libraryStore.applyIndexManifest(completed, bookID: bookID)
-                    setProgress(IndexingProgress(
-                        phase: .complete,
-                        completedSourceUnits: sectionCount,
-                        totalSourceUnits: sectionCount,
-                        indexedWordCount: max(totalWords, completed.indexedWordCount),
-                        playableFrontier: completed.playableFrontier
-                    ), bookID: bookID)
+                    setProgress(
+                        IndexingProgress(
+                            phase: .complete,
+                            completedSourceUnits: sectionCount,
+                            totalSourceUnits: sectionCount,
+                            indexedWordCount: max(totalWords, completed.indexedWordCount),
+                            playableFrontier: completed.playableFrontier
+                        ), bookID: bookID)
                 }
             }
         } catch is CancellationError {

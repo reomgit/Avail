@@ -133,7 +133,8 @@ public actor ReadingIndexStore {
         let committed = Set(current.batchFiles)
         for entry in entries {
             if entry.pathExtension == "tmp"
-                || (entry.lastPathComponent.hasPrefix("batch-") && !committed.contains(entry.lastPathComponent)) {
+                || (entry.lastPathComponent.hasPrefix("batch-") && !committed.contains(entry.lastPathComponent))
+            {
                 try fileManager.removeItem(at: entry)
             }
         }

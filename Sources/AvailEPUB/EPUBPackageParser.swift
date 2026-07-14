@@ -94,7 +94,8 @@ struct EPUBPackageParser {
         }
 
         let coverID = delegate.coverID
-        let coverPath = manifest.values.first(where: { $0.properties.contains("cover-image") })?.path
+        let coverPath =
+            manifest.values.first(where: { $0.properties.contains("cover-image") })?.path
             ?? coverID.flatMap { manifest[$0]?.path }
         return EPUBPackage(
             title: delegate.title?.trimmingCharacters(in: .whitespacesAndNewlines).nilIfEmpty,
@@ -179,12 +180,13 @@ private final class PackageXMLDelegate: NSObject, XMLParserDelegate {
             capturedText = ""
         case "item":
             guard let id = attributeDict["id"], let href = attributeDict["href"] else { return }
-            manifestItems.append(Item(
-                id: id,
-                href: href,
-                mediaType: attributeDict["media-type"] ?? "",
-                properties: Set((attributeDict["properties"] ?? "").split(separator: " ").map(String.init))
-            ))
+            manifestItems.append(
+                Item(
+                    id: id,
+                    href: href,
+                    mediaType: attributeDict["media-type"] ?? "",
+                    properties: Set((attributeDict["properties"] ?? "").split(separator: " ").map(String.init))
+                ))
         case "itemref":
             if let idref = attributeDict["idref"] { spineIDs.append(idref) }
         case "meta":

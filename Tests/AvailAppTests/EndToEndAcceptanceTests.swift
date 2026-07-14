@@ -157,16 +157,24 @@ final class EndToEndAcceptanceTests: XCTestCase {
         let chapter = String(repeating: sentence, count: 180)
         let entries: [(String, Data)] = [
             ("mimetype", Data("application/epub+zip".utf8)),
-            ("META-INF/container.xml", Data("""
-            <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf"/></rootfiles></container>
-            """.utf8)),
-            ("OEBPS/content.opf", Data("""
-            <package version="3.0" xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
-              <metadata><dc:title>Acceptance EPUB</dc:title><dc:creator>Avail Tests</dc:creator><dc:language>en</dc:language></metadata>
-              <manifest><item id="one" href="one.xhtml" media-type="application/xhtml+xml"/><item id="two" href="two.xhtml" media-type="application/xhtml+xml"/></manifest>
-              <spine><itemref idref="one"/><itemref idref="two"/></spine>
-            </package>
-            """.utf8)),
+            (
+                "META-INF/container.xml",
+                Data(
+                    """
+                    <container xmlns="urn:oasis:names:tc:opendocument:xmlns:container"><rootfiles><rootfile full-path="OEBPS/content.opf"/></rootfiles></container>
+                    """.utf8)
+            ),
+            (
+                "OEBPS/content.opf",
+                Data(
+                    """
+                    <package version="3.0" xmlns="http://www.idpf.org/2007/opf" xmlns:dc="http://purl.org/dc/elements/1.1/">
+                      <metadata><dc:title>Acceptance EPUB</dc:title><dc:creator>Avail Tests</dc:creator><dc:language>en</dc:language></metadata>
+                      <manifest><item id="one" href="one.xhtml" media-type="application/xhtml+xml"/><item id="two" href="two.xhtml" media-type="application/xhtml+xml"/></manifest>
+                      <spine><itemref idref="one"/><itemref idref="two"/></spine>
+                    </package>
+                    """.utf8)
+            ),
             ("OEBPS/one.xhtml", Data("<html><body><h1>One</h1><p>\(chapter)</p></body></html>".utf8)),
             ("OEBPS/two.xhtml", Data("<html><body><h1>Two</h1><p>\(chapter)</p></body></html>".utf8)),
         ]
