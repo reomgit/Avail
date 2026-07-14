@@ -96,6 +96,7 @@ final class NowPlayingController: NowPlayingControlling {
             infoCenter.setPlaybackState(.paused)
         case .stopped, .failed:
             infoCenter.setPlaybackState(.stopped)
+            infoCenter.setNowPlayingInfo(nil)
         }
     }
 

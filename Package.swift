@@ -13,7 +13,12 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/weichsel/ZIPFoundation.git", from: "0.9.20"),
-        .package(url: "https://github.com/scinfu/SwiftSoup.git", from: "2.9.6"),
+        // Includes SwiftSoup's merged Swift 6.4 Release-build optimizer workaround.
+        // Return to a versioned requirement when the next SwiftSoup release contains it.
+        .package(
+            url: "https://github.com/scinfu/SwiftSoup.git",
+            revision: "83336847e47b2f499330c15426ad2fb180e72d9b"
+        ),
     ],
     targets: [
         .executableTarget(
@@ -40,7 +45,12 @@ let package = Package(
         ),
         .testTarget(
             name: "AvailAppTests",
-            dependencies: ["AvailApp"]
+            dependencies: [
+                "AvailApp",
+                "AvailEPUB",
+                "AvailPDF",
+                .product(name: "ZIPFoundation", package: "ZIPFoundation"),
+            ]
         ),
         .testTarget(
             name: "AvailCoreTests",

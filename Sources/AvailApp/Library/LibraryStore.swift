@@ -7,7 +7,7 @@ enum LibraryImportResult: Equatable {
     case existing(UUID)
 }
 
-enum LibraryRemovalMode {
+enum LibraryRemovalMode: Equatable {
     case recordOnly
     case moveFileToTrash
 }

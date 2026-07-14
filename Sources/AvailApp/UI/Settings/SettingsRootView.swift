@@ -1,16 +1,20 @@
 import SwiftUI
 
 struct SettingsRootView: View {
-    @Environment(AppEnvironment.self) private var environment
+    @AppStorage("selectedSettingsTab") private var selectedTab = "library"
 
     var body: some View {
-        Form {
-            LabeledContent("Library Location", value: "Not selected")
-                .foregroundStyle(.secondary)
+        TabView(selection: $selectedTab) {
+            LibrarySettingsView()
+                .tabItem { Label("Library", systemImage: "books.vertical") }
+                .tag("library")
+            PrivacyView()
+                .tabItem { Label("Privacy", systemImage: "hand.raised") }
+                .tag("privacy")
+            LicensesView()
+                .tabItem { Label("Licenses", systemImage: "doc.text") }
+                .tag("licenses")
         }
-        .formStyle(.grouped)
-        .frame(width: 480)
-        .padding()
-        .disabled(environment.launchState == .loading)
+        .frame(width: 560, height: 380)
     }
 }

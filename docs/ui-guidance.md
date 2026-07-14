@@ -43,3 +43,19 @@ Decisions:
 - Use a system serif font for book text. Emphasize the spoken range with both a semantic background and an underline so the cue is not color-only.
 - Publish scene-wide playback actions with `focusedSceneValue`; keep the same actions available through visible standard controls.
 - Automatic follow scrolls only while follow mode is active. A manual scroll suspends follow and reveals Return to Narration. Reduce Motion disables animated recentering.
+
+## Settings and recovery — 2026-07-15
+
+Sources:
+
+- [SwiftUI Settings scene](https://developer.apple.com/documentation/swiftui/settings/init%28content%3A%29)
+- [SwiftUI settings tabs and openSettings](https://developer.apple.com/documentation/swiftui/environmentvalues/opensettings)
+- [SwiftUI fileImporter](https://developer.apple.com/documentation/swiftui/view/fileimporter%28ispresented%3Aallowedcontenttypes%3Aallowsmultipleselection%3Aoncompletion%3AonCancellation%3A%29)
+- [HIG: Writing](https://developer.apple.com/design/human-interface-guidelines/writing)
+- [HIG: Designing for macOS](https://developer.apple.com/design/human-interface-guidelines/designing-for-macos)
+
+Decisions:
+
+- Keep Library, Privacy, and Licenses in the native Settings scene using a compact `TabView` and grouped forms.
+- Explain failures with a specific title, plain-language cause, and one concrete recovery action. Show destructive removal only after confirmation, and always route managed files through Trash.
+- State the local-only document and speech boundary directly. Mention the limited macOS Now Playing metadata handoff separately and only in the context of active playback.

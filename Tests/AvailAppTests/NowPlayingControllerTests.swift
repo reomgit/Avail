@@ -38,6 +38,7 @@ final class NowPlayingControllerTests: XCTestCase {
         XCTAssertEqual(infoCenter.state, .paused)
         controller.updatePlaybackState(.stopped)
         XCTAssertEqual(infoCenter.state, .stopped)
+        XCTAssertNil(infoCenter.info)
     }
 
     func testRemoteHandlersAreInstalledAndTeardownRemovesTargets() {
