@@ -21,6 +21,7 @@ extension FocusedValues {
 
 struct LibraryCommands: Commands {
     @FocusedValue(\.libraryCommandActions) private var actions
+    @FocusedValue(\.zenCommandActions) private var zenActions
 
     var body: some Commands {
         CommandGroup(after: .newItem) {
@@ -29,12 +30,27 @@ struct LibraryCommands: Commands {
                 .disabled(actions == nil)
         }
         CommandMenu("Listen") {
-            Button("Play or Pause") { actions?.togglePlayback() }
+            Button("Play or Pause") {
+                if let zenActions { zenActions.togglePlayback() } else { actions?.togglePlayback() }
+            }
                 .keyboardShortcut(.space, modifiers: [])
-                .disabled(actions?.canPlay != true)
+                .disabled(zenActions == nil && actions?.canPlay != true)
             Button("Open Zen") { actions?.openZen() }
                 .keyboardShortcut("z", modifiers: [.command, .shift])
                 .disabled(actions?.canOpenZen != true)
+            Divider()
+            Button("Skip Back 15 Seconds") { zenActions?.seekBackward() }
+                .keyboardShortcut(.leftArrow, modifiers: .command)
+                .disabled(zenActions == nil)
+            Button("Skip Forward 15 Seconds") { zenActions?.seekForward() }
+                .keyboardShortcut(.rightArrow, modifiers: .command)
+                .disabled(zenActions == nil)
+            Button("Previous Chapter") { zenActions?.previousChapter() }
+                .keyboardShortcut(.leftArrow, modifiers: .option)
+                .disabled(zenActions == nil)
+            Button("Next Chapter") { zenActions?.nextChapter() }
+                .keyboardShortcut(.rightArrow, modifiers: .option)
+                .disabled(zenActions == nil)
         }
     }
 }

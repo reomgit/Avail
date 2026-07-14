@@ -27,7 +27,7 @@ final class PlaybackCoordinator {
     private var queuedChunks: [SpeechChunk] = []
     private var currentChunkGlobalWordOffset = 0
     private var currentUTF16Offset = 0
-    private var currentNormalizedWordOffset = 0
+    private(set) var currentNormalizedWordOffset = 0
 
     private(set) var state: PlaybackState = .stopped
     private(set) var currentBookID: UUID?
@@ -35,6 +35,8 @@ final class PlaybackCoordinator {
     private(set) var highlightedChunkID: UUID?
     private(set) var highlightRange: NSRange?
     var followMode = true
+
+    var availableVoices: [NarrationVoice] { engine.voices }
 
     init(
         engine: any NarrationEngine,
@@ -117,6 +119,11 @@ final class PlaybackCoordinator {
               let record = try? libraryStore.book(id: bookID) else { return }
         let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
         let target = max(0, currentNormalizedWordOffset + Int(seconds * wordsPerSecond))
+        await seek(toNormalizedWordOffset: target)
+    }
+
+    func seek(toNormalizedWordOffset target: Int) async {
+        guard let bookID = currentBookID else { return }
         setState(.seeking)
         do {
             guard let position = try await indexStore.position(bookID: bookID, normalizedWordOffset: target) else {
@@ -128,6 +135,31 @@ final class PlaybackCoordinator {
         } catch {
             setState(.failed(String(describing: error)))
         }
+    }
+
+    func goToChapter(sectionID: UUID) async {
+        guard let bookID = currentBookID else { return }
+        do {
+            let sections = try await indexStore.sections(bookID: bookID)
+            let chunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
+            guard let section = sections.first(where: { $0.id == sectionID }),
+                  let chunk = section.chunkIDs.compactMap({ id in chunks.first(where: { $0.id == id }) }).first else {
+                return
+            }
+            try await move(to: chunk, requestedWordOffset: nil, stopFirst: true)
+        } catch {
+            setState(.failed(String(describing: error)))
+        }
+    }
+
+    func setNarrationRate(_ rate: Double, bookID: UUID) {
+        try? libraryStore.saveNarrationRate(rate, bookID: bookID)
+        restartCurrentUtteranceIfNeeded(bookID: bookID)
+    }
+
+    func setVoiceIdentifier(_ voiceIdentifier: String?, bookID: UUID) {
+        try? libraryStore.saveVoiceIdentifier(voiceIdentifier, bookID: bookID)
+        restartCurrentUtteranceIfNeeded(bookID: bookID)
     }
 
     func nextChapter() async {
@@ -230,7 +262,7 @@ final class PlaybackCoordinator {
         }
     }
 
-    private func move(to chunk: SpeechChunk, requestedWordOffset: Int, stopFirst: Bool) async throws {
+    private func move(to chunk: SpeechChunk, requestedWordOffset: Int?, stopFirst: Bool) async throws {
         guard let bookID = currentBookID else { return }
         let allChunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
         guard let index = allChunks.firstIndex(where: { $0.id == chunk.id }) else { return }
@@ -240,7 +272,7 @@ final class PlaybackCoordinator {
             chunks: Array(allChunks[index..<min(index + 2, allChunks.count)]),
             globalStart: globalStart,
             utf16Offset: 0,
-            normalizedWordOffset: requestedWordOffset
+            normalizedWordOffset: requestedWordOffset ?? globalStart
         )
         persistImmediately()
         speakCurrentChunk()
@@ -256,7 +288,7 @@ final class PlaybackCoordinator {
             var index = currentSectionIndex + direction
             while sections.indices.contains(index) {
                 if let target = sections[index].chunkIDs.compactMap({ id in chunks.first(where: { $0.id == id }) }).first {
-                    try await move(to: target, requestedWordOffset: 0, stopFirst: true)
+                    try await move(to: target, requestedWordOffset: nil, stopFirst: true)
                     return
                 }
                 index += direction
@@ -335,6 +367,12 @@ final class PlaybackCoordinator {
 
     private func persistImmediately() {
         persistence.flush(currentPosition())
+    }
+
+    private func restartCurrentUtteranceIfNeeded(bookID: UUID) {
+        guard currentBookID == bookID, state == .playing, currentChunk != nil else { return }
+        engine.stop()
+        speakCurrentChunk()
     }
 
     private func setState(_ newState: PlaybackState) {

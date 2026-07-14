@@ -105,6 +105,13 @@ final class LibraryStore {
         try context.save()
     }
 
+    func saveNarrationRate(_ rate: Double, bookID: UUID) throws {
+        guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
+        record.narrationRate = max(0.5, min(rate, 2))
+        record.updatedAt = Date()
+        try context.save()
+    }
+
     func importBook(from source: URL) async throws -> LibraryImportResult {
         let format = try format(for: source)
         let access = try locationStore.beginAccess()

@@ -15,6 +15,17 @@ struct AvailApp: App {
             ToolbarCommands()
         }
 
+        WindowGroup("Zen", id: "zen", for: UUID.self) { $bookID in
+            if let bookID {
+                ZenReaderView(bookID: bookID)
+                    .environment(environment)
+                    .modelContainer(environment.modelContainer)
+            } else {
+                ContentUnavailableView("Book Unavailable", systemImage: "book.closed")
+            }
+        }
+        .defaultSize(width: 1_080, height: 720)
+
         Settings {
             SettingsRootView()
                 .environment(environment)
