@@ -19,15 +19,51 @@ actor LibraryFileService {
 
     func fingerprint(of url: URL) throws -> String {
         guard fileManager.isReadableFile(atPath: url.path) else { throw LibraryError.sourceUnreadable }
+        var hasher = SHA256()
+        let values = try url.resourceValues(forKeys: [.isDirectoryKey])
+        if values.isDirectory == true {
+            try hashDirectory(at: url, into: &hasher)
+        } else {
+            try hashFile(at: url, into: &hasher)
+        }
+        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
+    }
+
+    private func hashDirectory(at root: URL, into hasher: inout SHA256) throws {
+        guard
+            let enumerator = fileManager.enumerator(
+                at: root,
+                includingPropertiesForKeys: [.isRegularFileKey, .isSymbolicLinkKey],
+                options: [.skipsHiddenFiles]
+            )
+        else {
+            throw LibraryError.sourceUnreadable
+        }
+        let rootPath = root.standardizedFileURL.path + "/"
+        let files = enumerator.compactMap { $0 as? URL }.filter { url in
+            guard let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey]) else { return false }
+            return values.isRegularFile == true && values.isSymbolicLink != true
+        }.sorted { $0.standardizedFileURL.path < $1.standardizedFileURL.path }
+
+        for file in files {
+            let path = file.standardizedFileURL.path
+            guard path.hasPrefix(rootPath) else { throw LibraryError.sourceUnreadable }
+            let relativePath = String(path.dropFirst(rootPath.count))
+            hasher.update(data: Data(relativePath.utf8))
+            hasher.update(data: Data([0]))
+            try hashFile(at: file, into: &hasher)
+            hasher.update(data: Data([0]))
+        }
+    }
+
+    private func hashFile(at url: URL, into hasher: inout SHA256) throws {
         let handle = try FileHandle(forReadingFrom: url)
         defer { try? handle.close() }
-        var hasher = SHA256()
         while true {
             let data = try handle.read(upToCount: 1_024 * 1_024) ?? Data()
             guard !data.isEmpty else { break }
             hasher.update(data: data)
         }
-        return hasher.finalize().map { String(format: "%02x", $0) }.joined()
     }
 
     func importFile(from source: URL, to root: URL, fingerprint: String) throws -> LibraryFileSnapshot {

@@ -18,43 +18,82 @@ struct EPUBPackage: Sendable {
 }
 
 struct EPUBArchiveReader {
-    private let archive: Archive
+    private enum Storage {
+        case archive(Archive)
+        case directory(URL)
+    }
+
+    private let storage: Storage
 
     init(url: URL) throws {
-        archive = try Archive(url: url, accessMode: .read)
+        let values = try url.resourceValues(forKeys: [.isDirectoryKey])
+        if values.isDirectory == true {
+            storage = .directory(url)
+        } else {
+            storage = .archive(try Archive(url: url, accessMode: .read))
+        }
     }
 
     func contains(_ path: String) -> Bool {
-        archive[path] != nil
+        guard isSafeArchivePath(path) else { return false }
+        switch storage {
+        case let .archive(archive):
+            return archive[path] != nil
+        case let .directory(root):
+            guard let url = resolvedURL(for: path, in: root) else { return false }
+            let values = try? url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey])
+            return values?.isRegularFile == true && values?.isSymbolicLink != true
+        }
     }
 
     func data(at path: String, maximumSize: Int64 = 64 * 1_024 * 1_024) throws -> Data {
-        guard isSafeArchivePath(path), let entry = archive[path] else {
-            throw EPUBError.unreadableContent(path)
-        }
-        guard Int64(entry.uncompressedSize) <= maximumSize else {
-            throw EPUBError.unreadableContent(path)
-        }
-
-        var result = Data()
-        result.reserveCapacity(Int(entry.uncompressedSize))
-        do {
-            _ = try archive.extract(entry) { chunk in
-                guard Int64(result.count + chunk.count) <= maximumSize else {
-                    throw EPUBError.unreadableContent(path)
-                }
-                result.append(chunk)
+        guard isSafeArchivePath(path) else { throw EPUBError.unreadableContent(path) }
+        switch storage {
+        case let .archive(archive):
+            guard let entry = archive[path], Int64(entry.uncompressedSize) <= maximumSize else {
+                throw EPUBError.unreadableContent(path)
             }
-        } catch let error as EPUBError {
-            throw error
-        } catch {
-            throw EPUBError.unreadableContent(path)
+
+            var result = Data()
+            result.reserveCapacity(Int(entry.uncompressedSize))
+            do {
+                _ = try archive.extract(entry) { chunk in
+                    guard Int64(result.count + chunk.count) <= maximumSize else {
+                        throw EPUBError.unreadableContent(path)
+                    }
+                    result.append(chunk)
+                }
+            } catch let error as EPUBError {
+                throw error
+            } catch {
+                throw EPUBError.unreadableContent(path)
+            }
+            return result
+        case let .directory(root):
+            guard let url = resolvedURL(for: path, in: root) else { throw EPUBError.unreadableContent(path) }
+            let values = try url.resourceValues(forKeys: [.isRegularFileKey, .isSymbolicLinkKey, .fileSizeKey])
+            guard values.isRegularFile == true,
+                values.isSymbolicLink != true,
+                Int64(values.fileSize ?? 0) <= maximumSize
+            else {
+                throw EPUBError.unreadableContent(path)
+            }
+            let result = try Data(contentsOf: url, options: .mappedIfSafe)
+            guard Int64(result.count) <= maximumSize else { throw EPUBError.unreadableContent(path) }
+            return result
         }
-        return result
     }
 
     private func isSafeArchivePath(_ path: String) -> Bool {
         !path.hasPrefix("/") && !path.split(separator: "/").contains("..")
+    }
+
+    private func resolvedURL(for path: String, in root: URL) -> URL? {
+        let resolvedRoot = root.resolvingSymlinksInPath().standardizedFileURL
+        let resolvedURL = root.appending(path: path).resolvingSymlinksInPath().standardizedFileURL
+        let rootPrefix = resolvedRoot.path.hasSuffix("/") ? resolvedRoot.path : resolvedRoot.path + "/"
+        guard resolvedURL.path.hasPrefix(rootPrefix) else { return nil }
+        return resolvedURL
     }
 }
 

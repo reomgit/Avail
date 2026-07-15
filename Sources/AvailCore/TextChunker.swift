@@ -56,7 +56,10 @@ public struct TextChunker: Sendable {
 
         for sentenceEnd in sentenceEnds {
             let candidate = trimmedRange(chunkStart..<sentenceEnd, in: text)
-            let previous = trimmedRange(chunkStart..<previousEnd, in: text)
+            let previous =
+                previousEnd < chunkStart
+                ? chunkStart..<chunkStart
+                : trimmedRange(chunkStart..<previousEnd, in: text)
 
             if candidate.count(in: text) > preferredMaximum, previous.count(in: text) >= targetMinimum {
                 result.append(previous)

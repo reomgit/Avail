@@ -44,6 +44,20 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: libraryURL.appending(path: "Book.epub").path))
     }
 
+    func testImportCopiesUnpackedEPUBPackage() async throws {
+        try prepareStore()
+        let source = try makeUnpackedEPUB(named: "Package.epub", in: sourceURL)
+
+        _ = try await store.importBook(from: source)
+
+        let destination = libraryURL.appending(path: "Package.epub", directoryHint: .isDirectory)
+        var isDirectory: ObjCBool = false
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destination.path, isDirectory: &isDirectory))
+        XCTAssertTrue(isDirectory.boolValue)
+        XCTAssertTrue(FileManager.default.fileExists(atPath: destination.appending(path: "mimetype").path))
+        XCTAssertEqual(try store.books().map(\.relativePath), ["Package.epub"])
+    }
+
     func testNameCollisionUsesFinderStyleSuffix() async throws {
         try prepareStore()
         let firstFolder = sourceURL.appending(path: "One", directoryHint: .isDirectory)
@@ -91,6 +105,18 @@ final class LibraryStoreTests: XCTestCase {
         try FileManager.default.removeItem(at: external)
         try await store.rescan()
         XCTAssertEqual(try store.book(id: enrolled.id)?.state, .missing)
+    }
+
+    func testRescanEnrollsExternalUnpackedEPUBPackage() async throws {
+        try prepareStore()
+        _ = try makeUnpackedEPUB(named: "External.epub", in: libraryURL)
+
+        try await store.rescan()
+
+        let enrolled = try XCTUnwrap(store.books().first)
+        XCTAssertEqual(enrolled.relativePath, "External.epub")
+        XCTAssertEqual(enrolled.format, .epub)
+        XCTAssertEqual(enrolled.state, .indexing)
     }
 
     func testRemoveRecordOnlyLeavesFileAndTrashModeDelegatesFile() async throws {
@@ -148,5 +174,12 @@ final class LibraryStoreTests: XCTestCase {
             locationStore: locationStore,
             trashHandler: { [weak self] url in self?.trashedURLs.append(url) }
         )
+    }
+
+    private func makeUnpackedEPUB(named name: String, in parent: URL) throws -> URL {
+        let package = parent.appending(path: name, directoryHint: .isDirectory)
+        try FileManager.default.createDirectory(at: package, withIntermediateDirectories: true)
+        try Data("application/epub+zip".utf8).write(to: package.appending(path: "mimetype"))
+        return package
     }
 }

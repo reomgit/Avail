@@ -60,6 +60,30 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
         XCTAssertEqual(sectionCount, 2)
     }
 
+    func testUnpackedEPUBPackageStreamsMetadataAndContent() async throws {
+        let url = try makeEPUB(
+            version: "3.0",
+            title: "An Unpacked Book",
+            author: "Package Author",
+            language: "en",
+            chapters: [("chapter.xhtml", "<h1>Package Chapter</h1><p>Readable package content.</p>")],
+            unpacked: true
+        )
+
+        let events = try await collectEvents(from: url)
+
+        guard case let .metadata(metadata) = events.first else {
+            return XCTFail("Expected metadata from the unpacked package")
+        }
+        XCTAssertEqual(metadata.title, "An Unpacked Book")
+        XCTAssertEqual(metadata.authors, ["Package Author"])
+        let spoken = events.compactMap { event -> IndexBatch? in
+            guard case let .batch(batch) = event else { return nil }
+            return batch
+        }.flatMap(\.chunks).map(\.text).joined(separator: " ")
+        XCTAssertTrue(spoken.contains("Readable package content."))
+    }
+
     func testEPUB2NCXAndMalformedHTMLRemainReadable() async throws {
         let url = try makeEPUB(
             version: "2.0",
@@ -207,7 +231,8 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
         chapters: [(name: String, html: String)],
         includeNavigation: Bool = false,
         encrypted: Bool = false,
-        coverData: Data? = nil
+        coverData: Data? = nil,
+        unpacked: Bool = false
     ) throws -> URL {
         var entries: [(String, Data)] = []
         entries.append(("mimetype", Data("application/epub+zip".utf8)))
@@ -265,20 +290,32 @@ final class EPUBIndexerTests: XCTestCase, @unchecked Sendable {
             entries.append(("META-INF/encryption.xml", Data("<encryption/>".utf8)))
         }
 
-        let archive = try Archive(accessMode: .create)
-        for (path, data) in entries {
-            try archive.addEntry(
-                with: path,
-                type: .file,
-                uncompressedSize: Int64(data.count),
-                provider: { position, size in
-                    let lower = Int(position)
-                    return data.subdata(in: lower..<lower + size)
-                }
-            )
-        }
         let url = temporaryDirectory.appending(path: "\(UUID().uuidString).epub")
-        try archive.data?.write(to: url)
+        if unpacked {
+            try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
+            for (path, data) in entries {
+                let destination = url.appending(path: path)
+                try FileManager.default.createDirectory(
+                    at: destination.deletingLastPathComponent(),
+                    withIntermediateDirectories: true
+                )
+                try data.write(to: destination)
+            }
+        } else {
+            let archive = try Archive(accessMode: .create)
+            for (path, data) in entries {
+                try archive.addEntry(
+                    with: path,
+                    type: .file,
+                    uncompressedSize: Int64(data.count),
+                    provider: { position, size in
+                        let lower = Int(position)
+                        return data.subdata(in: lower..<lower + size)
+                    }
+                )
+            }
+            try archive.data?.write(to: url)
+        }
         return url
     }
 }

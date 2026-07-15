@@ -57,6 +57,11 @@ final class IndexingCoordinator: IndexingPrioritizing {
         }
     }
 
+    func startIfNeeded(bookID: UUID) {
+        guard tasks[bookID] == nil else { return }
+        start(bookID: bookID)
+    }
+
     func cancel(bookID: UUID) {
         tasks.removeValue(forKey: bookID)?.cancel()
     }

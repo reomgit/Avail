@@ -51,7 +51,7 @@ struct LibraryRootView: View {
         .focusedSceneValue(\.libraryCommandActions, commandActions)
         .fileImporter(
             isPresented: $model.isImporting,
-            allowedContentTypes: supportedBookTypes,
+            allowedContentTypes: BookImportContentTypes.all,
             allowsMultipleSelection: true
         ) { result in
             guard case let .success(urls) = result else { return }
@@ -68,6 +68,9 @@ struct LibraryRootView: View {
         .onAppear {
             if model.selectedBookID == nil { model.selectedBookID = environment.selectedBookID }
         }
+        .task {
+            await environment.rescanLibrary()
+        }
     }
 
     private var title: String {
@@ -80,10 +83,6 @@ struct LibraryRootView: View {
 
     private var playbackSymbol: String {
         environment.playbackCoordinator?.state == .playing ? "pause.fill" : "play.fill"
-    }
-
-    private var supportedBookTypes: [UTType] {
-        [.pdf, UTType(filenameExtension: "epub") ?? .data]
     }
 
     private var commandActions: LibraryCommandActions {

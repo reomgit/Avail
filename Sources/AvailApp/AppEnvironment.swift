@@ -94,6 +94,7 @@ final class AppEnvironment {
             defer { if didAccess { url.stopAccessingSecurityScopedResource() } }
             try locationStore.select(url)
             try await libraryStore?.rescan()
+            try startPendingIndexes()
             launchState = .ready
         } catch {
             launchState = .failed("Avail could not use that folder. Choose it again to reconnect.")
@@ -124,8 +125,16 @@ final class AppEnvironment {
     func rescanLibrary() async {
         do {
             try await libraryStore?.rescan()
+            try startPendingIndexes()
         } catch {
             lastActionError = "The library folder could not be refreshed."
+        }
+    }
+
+    private func startPendingIndexes() throws {
+        let books = try libraryStore?.books() ?? []
+        for book in books where book.state == .indexing && !book.isIndexComplete {
+            indexingCoordinator?.startIfNeeded(bookID: book.id)
         }
     }
 

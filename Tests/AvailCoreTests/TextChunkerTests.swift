@@ -60,4 +60,17 @@ final class TextChunkerTests: XCTestCase {
                 chunk.text.split(separator: " ").allSatisfy { $0 == Substring(word) }
             })
     }
+
+    func testLongSentenceFollowedByAnotherSentenceDoesNotCreateReversedRange() {
+        let longSentence = Array(repeating: "narration", count: 250).joined(separator: " ") + "."
+        let input = longSentence + "\n\nA short sentence follows."
+
+        let chunks = TextChunker().chunks(from: input, sectionID: sectionID, locator: locator)
+
+        XCTAssertEqual(
+            chunks.map(\.text).joined(separator: " ").normalizedWhitespace,
+            input.normalizedWhitespace
+        )
+        XCTAssertTrue(chunks.allSatisfy { $0.text.count <= 2_000 })
+    }
 }
