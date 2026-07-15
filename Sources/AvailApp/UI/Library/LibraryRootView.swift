@@ -5,6 +5,7 @@ import UniformTypeIdentifiers
 struct LibraryRootView: View {
     @Environment(AppEnvironment.self) private var environment
     @Environment(\.openWindow) private var openWindow
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Query(sort: \LibraryBookRecord.createdAt) private var books: [LibraryBookRecord]
     @State private var model = LibraryViewModel()
 
@@ -15,6 +16,8 @@ struct LibraryRootView: View {
 
     var body: some View {
         @Bindable var model = model
+        let playerContext = activePlaybackContext
+
         NavigationSplitView {
             LibrarySidebar(
                 selection: $model.collection,
@@ -24,30 +27,60 @@ struct LibraryRootView: View {
             )
             .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
         } detail: {
-            LibraryGridView(
-                books: displayedBooks,
-                selection: $model.selectedBookID,
-                canPlay: model.canPlay,
-                play: play,
-                openZen: openZen
-            )
-            .navigationTitle(title)
-            .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search books")
-            .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button("Import", systemImage: "plus") { model.isImporting = true }
-                        .help("Import EPUB or PDF books")
-                    Button("Listen", systemImage: playbackSymbol) { togglePlayback() }
-                        .disabled(!model.canPlay(selectedBook))
-                        .help("Play or pause the selected book")
-                    Button("Open Zen", systemImage: "rectangle.split.2x1") {
-                        if let selectedBook { openZen(selectedBook) }
-                    }
-                    .disabled(!model.canPlay(selectedBook))
-                    .help("Open the focused listening and reading window")
+            ZStack(alignment: .bottom) {
+                LibraryGridView(
+                    books: displayedBooks,
+                    selection: $model.selectedBookID,
+                    canPlay: model.canPlay,
+                    play: play,
+                    openZen: openZen,
+                    bottomContentInset: playerContext == nil ? 0 : 118,
+                    artworkURL: artworkURL
+                )
+
+                if let playerContext,
+                    let playback = environment.playbackCoordinator
+                {
+                    FloatingPlaybackBar(
+                        book: playerContext.book,
+                        presentation: playerContext.presentation,
+                        artworkURL: artworkURL(for: playerContext.book),
+                        currentWordOffset: playback.currentNormalizedWordOffset,
+                        totalWordCount: playerContext.book.indexedWordCount,
+                        narrationRate: playerContext.book.narrationRate,
+                        previousChapter: { Task { await playback.previousChapter() } },
+                        skipBackward: { Task { await playback.seek(by: -15) } },
+                        togglePlayback: { togglePlayback(for: playerContext.book) },
+                        skipForward: { Task { await playback.seek(by: 15) } },
+                        nextChapter: { Task { await playback.nextChapter() } },
+                        seek: { target in Task { await playback.seek(toNormalizedWordOffset: target) } },
+                        openZen: { openZen(playerContext.book) }
+                    )
+                    .frame(maxWidth: 980)
+                    .padding(.horizontal, 18)
+                    .padding(.bottom, 16)
+                    .transition(playerTransition)
                 }
             }
+            .navigationTitle(title)
         }
+        .searchable(text: $model.searchText, placement: .toolbar, prompt: "Search books")
+        .toolbar {
+            LibraryToolbar(
+                playbackSymbol: playbackSymbol,
+                canPlay: model.canPlay(selectedBook),
+                canOpenZen: model.canPlay(selectedBook),
+                importBooks: { model.isImporting = true },
+                togglePlayback: togglePlayback,
+                openZen: {
+                    if let selectedBook { openZen(selectedBook) }
+                }
+            )
+        }
+        .animation(
+            reduceMotion ? nil : .easeOut(duration: 0.2),
+            value: playerContext?.book.id
+        )
         .focusedSceneValue(\.libraryCommandActions, commandActions)
         .fileImporter(
             isPresented: $model.isImporting,
@@ -82,7 +115,25 @@ struct LibraryRootView: View {
     }
 
     private var playbackSymbol: String {
-        environment.playbackCoordinator?.state == .playing ? "pause.fill" : "play.fill"
+        guard environment.playbackCoordinator?.currentBookID == selectedBook?.id,
+            environment.playbackCoordinator?.state == .playing
+        else { return "play.fill" }
+        return "pause.fill"
+    }
+
+    private var activePlaybackContext: LibraryPlaybackBarContext? {
+        guard let playback = environment.playbackCoordinator else { return nil }
+        return LibraryPlaybackBarContext.make(
+            books: books,
+            currentBookID: playback.currentBookID,
+            state: playback.state,
+            chapterTitle: playback.currentChapterTitle
+        )
+    }
+
+    private var playerTransition: AnyTransition {
+        if reduceMotion { return .opacity }
+        return .move(edge: .bottom).combined(with: .opacity)
     }
 
     private var commandActions: LibraryCommandActions {
@@ -110,14 +161,25 @@ struct LibraryRootView: View {
     }
 
     private func togglePlayback() {
-        guard let selectedBook, model.canPlay(selectedBook), let playback = environment.playbackCoordinator else { return }
-        if playback.state == .playing {
+        guard let selectedBook, model.canPlay(selectedBook) else { return }
+        togglePlayback(for: selectedBook)
+    }
+
+    private func togglePlayback(for book: LibraryBookRecord) {
+        guard let playback = environment.playbackCoordinator else { return }
+        if playback.currentBookID != book.id {
+            Task { await playback.play(bookID: book.id) }
+        } else if playback.state == .playing {
             playback.pause()
-        } else if playback.currentBookID == selectedBook.id, playback.state == .paused {
+        } else if playback.state == .paused {
             playback.resume()
-        } else {
-            Task { await playback.play(bookID: selectedBook.id) }
+        } else if playback.state == .stopped {
+            Task { await playback.play(bookID: book.id) }
         }
+    }
+
+    private func artworkURL(for book: LibraryBookRecord) -> URL? {
+        environment.libraryStore?.artworkURL(for: book)
     }
 
     private func openZen(_ book: LibraryBookRecord) {

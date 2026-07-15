@@ -35,7 +35,8 @@ struct FloatingPlaybackBar: View {
                 AdaptiveGlassSurface {
                     PlaybackTransportControls(
                         isPlaying: presentation.isPlaying,
-                        controlsEnabled: true,
+                        controlsEnabled: presentation.canSeek,
+                        toggleEnabled: presentation.canTogglePlayback,
                         previousChapter: previousChapter,
                         skipBackward: skipBackward,
                         togglePlayback: togglePlayback,
@@ -89,6 +90,7 @@ struct FloatingPlaybackBar: View {
 
                     PlaybackToggleButton(
                         isPlaying: presentation.isPlaying,
+                        isEnabled: presentation.canTogglePlayback,
                         action: togglePlayback
                     )
 

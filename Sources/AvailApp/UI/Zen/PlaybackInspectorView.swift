@@ -2,8 +2,6 @@ import SwiftUI
 
 struct PlaybackInspectorView: View {
     let model: ZenViewModel
-    @State private var scrubValue = 0.0
-    @State private var isScrubbing = false
 
     var body: some View {
         ScrollView {
@@ -27,102 +25,54 @@ struct PlaybackInspectorView: View {
             .padding(24)
         }
         .background(.regularMaterial)
-        .onAppear { scrubValue = Double(model.playback.currentNormalizedWordOffset) }
-        .onChange(of: model.playback.currentNormalizedWordOffset) { _, newValue in
-            if !isScrubbing { scrubValue = Double(newValue) }
+    }
+
+    @ViewBuilder
+    private var cover: some View {
+        if let book = model.book {
+            BookArtworkView(book: book, artworkURL: model.artworkURL, cornerRadius: 10)
+                .frame(maxWidth: 170)
+                .frame(maxWidth: .infinity)
+        } else {
+            ProgressView()
+                .frame(maxWidth: .infinity, minHeight: 220)
         }
     }
 
-    private var cover: some View {
-        RoundedRectangle(cornerRadius: 10)
-            .fill(.quaternary)
-            .aspectRatio(2 / 3, contentMode: .fit)
-            .frame(maxWidth: 170)
-            .overlay {
-                Image(systemName: "book.closed")
-                    .font(.system(size: 38, weight: .light))
-                    .foregroundStyle(.secondary)
-            }
-            .frame(maxWidth: .infinity)
-            .accessibilityLabel("Book cover")
-    }
-
     private var transportControls: some View {
-        HStack(spacing: 12) {
-            controlButton("Previous Chapter", systemImage: "backward.end.fill") {
-                Task { await model.playback.previousChapter() }
-            }
-            controlButton("Back 15 Seconds", systemImage: "gobackward.15") {
-                Task { await model.playback.seek(by: -15) }
-            }
-            Button {
-                model.togglePlayback()
-            } label: {
-                Image(systemName: model.playback.state == .playing ? "pause.fill" : "play.fill")
-                    .font(.title2)
-                    .frame(width: 36, height: 36)
-            }
-            .buttonStyle(.borderedProminent)
-            .clipShape(.circle)
-            .accessibilityLabel(model.playback.state == .playing ? "Pause" : "Play")
-
-            controlButton("Forward 15 Seconds", systemImage: "goforward.15") {
-                Task { await model.playback.seek(by: 15) }
-            }
-            controlButton("Next Chapter", systemImage: "forward.end.fill") {
-                Task { await model.playback.nextChapter() }
+        AdaptiveGlassContainer(spacing: 8) {
+            AdaptiveGlassSurface {
+                PlaybackTransportControls(
+                    isPlaying: model.playback.state == .playing,
+                    controlsEnabled: model.isConnectedToActivePlayback && (playbackPresentation?.canSeek ?? false),
+                    toggleEnabled: playbackPresentation?.canTogglePlayback ?? true,
+                    previousChapter: { Task { await model.playback.previousChapter() } },
+                    skipBackward: { Task { await model.playback.seek(by: -15) } },
+                    togglePlayback: model.togglePlayback,
+                    skipForward: { Task { await model.playback.seek(by: 15) } },
+                    nextChapter: { Task { await model.playback.nextChapter() } }
+                )
+                .padding(10)
             }
         }
         .frame(maxWidth: .infinity)
     }
 
     private var progressControls: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            Slider(
-                value: $scrubValue,
-                in: 0...Double(max(1, model.book?.indexedWordCount ?? 1)),
-                onEditingChanged: { editing in
-                    isScrubbing = editing
-                    if !editing { model.seek(to: Int(scrubValue)) }
-                }
-            )
-            .accessibilityLabel("Book position")
-            .accessibilityValue(progressAccessibilityValue)
-
-            HStack {
-                Text(elapsedTime, format: .time(pattern: .minuteSecond))
-                Spacer()
-                Text(remainingTime, format: .time(pattern: .minuteSecond))
-            }
-            .font(.caption.monospacedDigit())
-            .foregroundStyle(.secondary)
-        }
+        PlaybackProgressControl(
+            currentWordOffset: model.playback.currentNormalizedWordOffset,
+            totalWordCount: model.book?.indexedWordCount ?? 0,
+            narrationRate: model.book?.narrationRate ?? 1,
+            canSeek: model.isConnectedToActivePlayback && (playbackPresentation?.canSeek ?? false),
+            seek: model.seek
+        )
     }
 
-    private var wordsPerSecond: Double {
-        2.5 * max(0.5, min(model.book?.narrationRate ?? 1, 2))
-    }
-
-    private var elapsedTime: Duration {
-        .seconds(scrubValue / wordsPerSecond)
-    }
-
-    private var remainingTime: Duration {
-        let remainingWords = max(0, Double(model.book?.indexedWordCount ?? 0) - scrubValue)
-        return .seconds(remainingWords / wordsPerSecond)
-    }
-
-    private var progressAccessibilityValue: String {
-        let total = max(1, model.book?.indexedWordCount ?? 1)
-        return ((scrubValue / Double(total)) * 100).formatted(.number.precision(.fractionLength(0))) + " percent"
-    }
-
-    private func controlButton(_ label: String, systemImage: String, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Image(systemName: systemImage)
-        }
-        .buttonStyle(.borderless)
-        .accessibilityLabel(label)
-        .help(label)
+    private var playbackPresentation: PlaybackBarPresentation? {
+        PlaybackBarPresentation.make(
+            book: model.book,
+            state: model.playback.state,
+            chapterTitle: model.currentChapterTitle
+        )
     }
 }

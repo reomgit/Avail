@@ -85,6 +85,16 @@ final class ZenViewModelTests: XCTestCase {
         XCTAssertEqual(record.voiceIdentifier, "voice.en")
     }
 
+    func testLoadedBookExposesPersistedArtworkURL() async throws {
+        fixture = try await ZenFixture(sandbox: sandbox)
+        let model = fixture.makeModel()
+
+        await model.load()
+
+        let artworkURL = try XCTUnwrap(model.artworkURL)
+        XCTAssertEqual(try Data(contentsOf: artworkURL), fixture.coverData)
+    }
+
     private func settle() async {
         await Task.yield()
         await Task.yield()
@@ -100,6 +110,9 @@ private final class ZenFixture {
     let playback: PlaybackCoordinator
     let bookID: UUID
     let chunks: [SpeechChunk]
+    let coverData = Data(
+        base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )!
 
     init(sandbox: URL) async throws {
         let libraryURL = sandbox.appending(path: "Library", directoryHint: .isDirectory)
@@ -123,6 +136,10 @@ private final class ZenFixture {
         guard case let .created(createdID) = try await libraryStore.importBook(from: source) else {
             throw CocoaError(.fileWriteUnknown)
         }
+        try await libraryStore.applyMetadata(
+            BookMetadata(title: "Zen", coverData: coverData),
+            bookID: createdID
+        )
         bookID = createdID
         indexStore = ReadingIndexStore(rootURL: sandbox.appending(path: "Indexes", directoryHint: .isDirectory))
 

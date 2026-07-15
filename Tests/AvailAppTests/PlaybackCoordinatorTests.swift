@@ -147,15 +147,21 @@ final class PlaybackCoordinatorTests: XCTestCase {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20], isIndexComplete: false)
         await fixture.coordinator.play(bookID: fixture.bookID)
         fixture.engine.emit(.finished(chunkID: fixture.chunks[0].id))
-        await settle()
+        let didStartBuffering = await waitUntil {
+            fixture.coordinator.state == .bufferingForIndex
+        }
 
+        XCTAssertTrue(didStartBuffering, "Timed out waiting for the coordinator to reach the indexing frontier")
         XCTAssertEqual(fixture.coordinator.state, .bufferingForIndex)
         XCTAssertEqual(fixture.indexing.prioritizedBookIDs, [fixture.bookID])
 
         let appended = try await fixture.appendChunk(words: 20)
         fixture.indexing.emit(bookID: fixture.bookID, progress: IndexingProgress(phase: .playable, indexedWordCount: 40))
-        await settle()
+        let didResume = await waitUntil {
+            fixture.engine.spoken.last?.chunk.id == appended.id
+        }
 
+        XCTAssertTrue(didResume, "Timed out waiting for playback to resume after the committed indexing update")
         XCTAssertEqual(fixture.engine.spoken.last?.chunk.id, appended.id)
     }
 
@@ -182,6 +188,20 @@ final class PlaybackCoordinatorTests: XCTestCase {
         await Task.yield()
         await Task.yield()
         try? await Task.sleep(for: .milliseconds(2))
+    }
+
+    private func waitUntil(
+        timeout: Duration = .seconds(1),
+        condition: () -> Bool
+    ) async -> Bool {
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: timeout)
+        while !condition() {
+            guard clock.now < deadline else { return false }
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        return true
     }
 }
 

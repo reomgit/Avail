@@ -53,6 +53,10 @@ final class ZenViewModel {
         }
         return sections.first(where: { $0.id == currentSectionID })?.title
     }
+    var artworkURL: URL? {
+        guard let book else { return nil }
+        return libraryStore.artworkURL(for: book)
+    }
     var availableVoices: [NarrationVoice] {
         guard let languageCode = book?.languageCode, !languageCode.isEmpty else {
             return playback.availableVoices

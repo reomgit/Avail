@@ -41,7 +41,7 @@ struct ReadingContentView: View {
                     Button("Return to Narration", systemImage: "text.line.first.and.arrowtriangle.forward") {
                         model.returnToNarration(reduceMotion: reduceMotion)
                     }
-                    .buttonStyle(.borderedProminent)
+                    .adaptiveProminentButtonStyle()
                     .padding()
                     .accessibilityHint("Re-enables automatic scrolling to the spoken text.")
                 }

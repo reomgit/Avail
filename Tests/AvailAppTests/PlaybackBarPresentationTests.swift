@@ -43,10 +43,13 @@ final class PlaybackBarPresentationTests: XCTestCase {
 
         XCTAssertEqual(buffering.statusText, "Preparing the next passage…")
         XCTAssertFalse(buffering.canSeek)
+        XCTAssertFalse(buffering.canTogglePlayback)
         XCTAssertEqual(seeking.statusText, "Seeking…")
         XCTAssertFalse(seeking.canSeek)
+        XCTAssertFalse(seeking.canTogglePlayback)
         XCTAssertEqual(failed.statusText, "Speech unavailable")
         XCTAssertFalse(failed.canSeek)
+        XCTAssertFalse(failed.canTogglePlayback)
     }
 
     func testPlayingAndPausedStatesMapPrimaryAction() throws {
@@ -56,9 +59,11 @@ final class PlaybackBarPresentationTests: XCTestCase {
         XCTAssertTrue(playing.isPlaying)
         XCTAssertEqual(playing.primaryActionLabel, "Pause")
         XCTAssertTrue(playing.canSeek)
+        XCTAssertTrue(playing.canTogglePlayback)
         XCTAssertFalse(paused.isPlaying)
         XCTAssertEqual(paused.primaryActionLabel, "Play")
         XCTAssertTrue(paused.canSeek)
+        XCTAssertTrue(paused.canTogglePlayback)
     }
 
     func testBookMetadataUsesAuthorFallbackAndPreservesChapter() throws {
@@ -67,6 +72,37 @@ final class PlaybackBarPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.title, "The Test Book")
         XCTAssertEqual(presentation.author, "Unknown Author")
         XCTAssertEqual(presentation.chapterTitle, "Chapter 2")
+    }
+
+    func testLibraryContextMatchesActiveRecordAndHidesStaleSession() throws {
+        let book = makeBook()
+        let context = try XCTUnwrap(
+            LibraryPlaybackBarContext.make(
+                books: [book],
+                currentBookID: book.id,
+                state: .paused,
+                chapterTitle: "Chapter 2"
+            )
+        )
+
+        XCTAssertTrue(context.book === book)
+        XCTAssertEqual(context.presentation.bookID, book.id)
+        XCTAssertNil(
+            LibraryPlaybackBarContext.make(
+                books: [book],
+                currentBookID: UUID(),
+                state: .paused,
+                chapterTitle: nil
+            )
+        )
+        XCTAssertNil(
+            LibraryPlaybackBarContext.make(
+                books: [book],
+                currentBookID: nil,
+                state: .stopped,
+                chapterTitle: nil
+            )
+        )
     }
 
     private func makePresentation(
