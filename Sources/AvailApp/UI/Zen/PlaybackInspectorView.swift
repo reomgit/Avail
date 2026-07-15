@@ -43,9 +43,9 @@ struct PlaybackInspectorView: View {
         AdaptiveGlassContainer(spacing: 8) {
             AdaptiveGlassSurface {
                 PlaybackTransportControls(
-                    isPlaying: model.playback.state == .playing,
-                    controlsEnabled: model.isConnectedToActivePlayback && (playbackPresentation?.canSeek ?? false),
-                    toggleEnabled: playbackPresentation?.canTogglePlayback ?? true,
+                    isPlaying: model.playbackControlState.isPlaying,
+                    controlsEnabled: model.isConnectedToActivePlayback && (model.playbackPresentation?.canSeek ?? false),
+                    toggleEnabled: model.playbackControlState.canTogglePlayback,
                     previousChapter: { Task { await model.playback.previousChapter() } },
                     skipBackward: { Task { await model.playback.seek(by: -15) } },
                     togglePlayback: model.togglePlayback,
@@ -63,16 +63,8 @@ struct PlaybackInspectorView: View {
             currentWordOffset: model.playback.currentNormalizedWordOffset,
             totalWordCount: model.book?.indexedWordCount ?? 0,
             narrationRate: model.book?.narrationRate ?? 1,
-            canSeek: model.isConnectedToActivePlayback && (playbackPresentation?.canSeek ?? false),
+            canSeek: model.isConnectedToActivePlayback && (model.playbackPresentation?.canSeek ?? false),
             seek: model.seek
-        )
-    }
-
-    private var playbackPresentation: PlaybackBarPresentation? {
-        PlaybackBarPresentation.make(
-            book: model.book,
-            state: model.playback.state,
-            chapterTitle: model.currentChapterTitle
         )
     }
 }

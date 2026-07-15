@@ -95,6 +95,32 @@ final class ZenViewModelTests: XCTestCase {
         XCTAssertEqual(try Data(contentsOf: artworkURL), fixture.coverData)
     }
 
+    func testPlaybackControlsStartOpenBookWhenAnotherBookIsPlaying() {
+        let bookID = UUID()
+        let state = ZenPlaybackControlState.make(
+            bookID: bookID,
+            currentBookID: UUID(),
+            playbackState: .playing
+        )
+
+        XCTAssertFalse(state.isPlaying)
+        XCTAssertTrue(state.canTogglePlayback)
+        XCTAssertEqual(state.toggleAction, .start)
+    }
+
+    func testPlaybackControlsRespectTransientStateOnlyForOpenBook() {
+        let bookID = UUID()
+        let state = ZenPlaybackControlState.make(
+            bookID: bookID,
+            currentBookID: bookID,
+            playbackState: .bufferingForIndex
+        )
+
+        XCTAssertFalse(state.isPlaying)
+        XCTAssertFalse(state.canTogglePlayback)
+        XCTAssertEqual(state.toggleAction, .unavailable)
+    }
+
     private func settle() async {
         await Task.yield()
         await Task.yield()

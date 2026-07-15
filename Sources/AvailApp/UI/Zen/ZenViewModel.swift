@@ -18,6 +18,48 @@ struct ZenCommandActions {
     var nextChapter: () -> Void
 }
 
+enum ZenPlaybackToggleAction: Equatable {
+    case start
+    case pause
+    case resume
+    case unavailable
+}
+
+struct ZenPlaybackControlState: Equatable {
+    let isPlaying: Bool
+    let canTogglePlayback: Bool
+    let toggleAction: ZenPlaybackToggleAction
+
+    static func make(
+        bookID: UUID,
+        currentBookID: UUID?,
+        playbackState: PlaybackState
+    ) -> ZenPlaybackControlState {
+        guard currentBookID == bookID else {
+            return ZenPlaybackControlState(
+                isPlaying: false,
+                canTogglePlayback: true,
+                toggleAction: .start
+            )
+        }
+
+        switch playbackState {
+        case .stopped:
+            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .start)
+        case .playing:
+            return ZenPlaybackControlState(isPlaying: true, canTogglePlayback: true, toggleAction: .pause)
+        case .paused:
+            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .resume)
+        case .bufferingForIndex, .seeking, .failed:
+            return ZenPlaybackControlState(
+                isPlaying: false,
+                canTogglePlayback: false,
+                toggleAction: .unavailable
+            )
+        }
+    }
+}
+
 private struct ZenCommandActionsKey: FocusedValueKey {
     typealias Value = ZenCommandActions
 }
@@ -46,6 +88,20 @@ final class ZenViewModel {
 
     var showsReturnToNarration: Bool { !isFollowingNarration }
     var isConnectedToActivePlayback: Bool { playback.currentBookID == bookID }
+    var playbackControlState: ZenPlaybackControlState {
+        ZenPlaybackControlState.make(
+            bookID: bookID,
+            currentBookID: playback.currentBookID,
+            playbackState: playback.state
+        )
+    }
+    var playbackPresentation: PlaybackBarPresentation? {
+        PlaybackBarPresentation.make(
+            book: book,
+            state: isConnectedToActivePlayback ? playback.state : .stopped,
+            chapterTitle: currentChapterTitle
+        )
+    }
     var currentSectionID: UUID? { playback.currentChunk?.sectionID }
     var currentChapterTitle: String? {
         if isConnectedToActivePlayback, let currentChapterTitle = playback.currentChapterTitle {
@@ -121,12 +177,15 @@ final class ZenViewModel {
     }
 
     func togglePlayback() {
-        if playback.state == .playing {
-            playback.pause()
-        } else if playback.currentBookID == bookID, playback.state == .paused {
-            playback.resume()
-        } else {
+        switch playbackControlState.toggleAction {
+        case .start:
             Task { await playback.play(bookID: bookID) }
+        case .pause:
+            playback.pause()
+        case .resume:
+            playback.resume()
+        case .unavailable:
+            break
         }
     }
 
