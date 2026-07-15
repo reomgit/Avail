@@ -28,6 +28,7 @@ final class PlaybackCoordinator {
     private var currentChunkGlobalWordOffset = 0
     private var currentUTF16Offset = 0
     private(set) var currentNormalizedWordOffset = 0
+    private var currentArtworkData: Data?
 
     private(set) var state: PlaybackState = .stopped
     private(set) var currentBookID: UUID?
@@ -82,6 +83,7 @@ final class PlaybackCoordinator {
 
         do {
             guard let record = try libraryStore.book(id: bookID) else { throw LibraryError.missingRecord }
+            currentArtworkData = libraryStore.artworkData(for: record)
             currentBookID = bookID
             currentChapterTitle = nil
             currentChapterNumber = nil
@@ -409,7 +411,7 @@ final class PlaybackCoordinator {
                 artist: record.author,
                 chapterTitle: currentChapterTitle,
                 chapterNumber: currentChapterNumber,
-                artworkData: libraryStore.artworkData(for: record),
+                artworkData: currentArtworkData,
                 estimatedDuration: Double(record.indexedWordCount) / wordsPerSecond,
                 elapsedTime: Double(currentNormalizedWordOffset) / wordsPerSecond,
                 playbackRate: state == .playing ? record.narrationRate : 0

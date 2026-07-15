@@ -143,6 +143,24 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertNil(fixture.nowPlaying.snapshots.last?.artworkData)
     }
 
+    func testNowPlayingReusesArtworkForActiveSessionUpdates() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        let artworkURL = try XCTUnwrap(fixture.libraryStore.artworkURL(for: record))
+        try FileManager.default.removeItem(at: artworkURL)
+
+        fixture.engine.emit(
+            .willSpeakRange(
+                chunkID: fixture.chunks[0].id,
+                range: NSRange(location: 0, length: 5)
+            )
+        )
+        await settle()
+
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.artworkData, fixture.coverData)
+    }
+
     func testFrontierBuffersPrioritizesIndexingAndResumesAfterCommittedUpdate() async throws {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20], isIndexComplete: false)
         await fixture.coordinator.play(bookID: fixture.bookID)
