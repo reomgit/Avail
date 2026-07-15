@@ -41,7 +41,7 @@ final class EndToEndAcceptanceTests: XCTestCase {
         for try await event in EPUBIndexer().events(for: access.url, bookID: bookID, resumeAfter: nil) {
             switch event {
             case let .metadata(metadata):
-                try services.library.applyMetadata(metadata, bookID: bookID)
+                try await services.library.applyMetadata(metadata, bookID: bookID)
             case let .batch(batch):
                 batches.append(batch)
                 committedWords += batch.chunks.reduce(0) { $0 + $1.wordCount }
@@ -136,7 +136,13 @@ final class EndToEndAcceptanceTests: XCTestCase {
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
         return AcceptanceServices(
-            library: LibraryStore(modelContainer: container, locationStore: locations),
+            library: LibraryStore(
+                modelContainer: container,
+                locationStore: locations,
+                artworkStore: ArtworkStore(
+                    rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
+                )
+            ),
             indexes: ReadingIndexStore(rootURL: sandbox.appending(path: "Indexes", directoryHint: .isDirectory))
         )
     }

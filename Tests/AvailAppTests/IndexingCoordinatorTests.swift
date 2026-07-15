@@ -9,6 +9,7 @@ final class IndexingCoordinatorTests: XCTestCase {
     nonisolated(unsafe) private var sandbox: URL!
     nonisolated(unsafe) private var libraryURL: URL!
     private var libraryStore: LibraryStore!
+    private var artworkStore: ArtworkStore!
     private var bookID: UUID!
     private var indexStore: ReadingIndexStore!
 
@@ -27,7 +28,14 @@ final class IndexingCoordinatorTests: XCTestCase {
         try await prepareBook()
         let batches = [makeBatch(ordinal: 0, words: 200), makeBatch(ordinal: 1, words: 300)]
         let factory = FakeIndexerFactory(events: [
-            .metadata(BookMetadata(title: "Indexed Title", authors: ["Author"], languageCode: "en")),
+            .metadata(
+                BookMetadata(
+                    title: "Indexed Title",
+                    authors: ["Author"],
+                    languageCode: "en",
+                    coverData: Self.validPNG
+                )
+            ),
             .batch(batches[0]),
             .batch(batches[1]),
             .completed(totalWords: 500, sectionCount: 2),
@@ -51,6 +59,8 @@ final class IndexingCoordinatorTests: XCTestCase {
         XCTAssertEqual(record.state, .ready)
         XCTAssertEqual(record.title, "Indexed Title")
         XCTAssertEqual(record.author, "Author")
+        let coverURL = try XCTUnwrap(artworkStore.fileURL(for: record.coverRelativePath))
+        XCTAssertEqual(try Data(contentsOf: coverURL), Self.validPNG)
         XCTAssertEqual(coordinator.progress(for: bookID)?.phase, .complete)
     }
 
@@ -131,7 +141,14 @@ final class IndexingCoordinatorTests: XCTestCase {
             for: LibraryBookRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
-        libraryStore = LibraryStore(modelContainer: container, locationStore: locationStore)
+        artworkStore = ArtworkStore(
+            rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
+        )
+        libraryStore = LibraryStore(
+            modelContainer: container,
+            locationStore: locationStore,
+            artworkStore: artworkStore
+        )
         let source = sandbox.appending(path: "Book.epub")
         try Data("book".utf8).write(to: source)
         guard case let .created(createdID) = try await libraryStore.importBook(from: source) else {
@@ -162,6 +179,10 @@ final class IndexingCoordinatorTests: XCTestCase {
         )
         return IndexBatch(ordinal: ordinal, sections: [section], chunks: [chunk], resumeLocator: locator)
     }
+
+    private static let validPNG = Data(
+        base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )!
 }
 
 private struct FakeIndexerFactory: IndexerProviding {

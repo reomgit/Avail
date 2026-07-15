@@ -186,7 +186,13 @@ private final class PlaybackFixture {
             for: LibraryBookRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
-        libraryStore = LibraryStore(modelContainer: container, locationStore: locationStore)
+        libraryStore = LibraryStore(
+            modelContainer: container,
+            locationStore: locationStore,
+            artworkStore: ArtworkStore(
+                rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
+            )
+        )
         indexStore = ReadingIndexStore(rootURL: sandbox.appending(path: "Indexes", directoryHint: .isDirectory))
         let created = try await Self.createBook(
             name: "First",

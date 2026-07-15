@@ -51,9 +51,18 @@ final class AppEnvironment {
             resolutionOptions: inMemory ? [] : [.withSecurityScope, .withoutUI]
         )
 
-        let library = LibraryStore(modelContainer: container, locationStore: locationStore)
-        let indexRoot = Self.indexRootURL(inMemory: inMemory)
-        let indexes = ReadingIndexStore(rootURL: indexRoot)
+        let supportRoot = Self.applicationSupportRootURL(inMemory: inMemory)
+        let artworkStore = ArtworkStore(
+            rootURL: supportRoot.appending(path: "Artwork", directoryHint: .isDirectory)
+        )
+        let library = LibraryStore(
+            modelContainer: container,
+            locationStore: locationStore,
+            artworkStore: artworkStore
+        )
+        let indexes = ReadingIndexStore(
+            rootURL: supportRoot.appending(path: "ReadingIndexes", directoryHint: .isDirectory)
+        )
         let indexing = IndexingCoordinator(libraryStore: library, indexStore: indexes)
         let playback = PlaybackCoordinator(
             engine: SystemNarrationEngine(),
@@ -138,14 +147,14 @@ final class AppEnvironment {
         }
     }
 
-    private static func indexRootURL(inMemory: Bool) -> URL {
+    private static func applicationSupportRootURL(inMemory: Bool) -> URL {
         if inMemory {
             return FileManager.default.temporaryDirectory
-                .appending(path: "AvailIndexes-\(UUID().uuidString)", directoryHint: .isDirectory)
+                .appending(path: "AvailEnvironment-\(UUID().uuidString)", directoryHint: .isDirectory)
         }
         let root = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask)[0]
             .appending(path: "Avail", directoryHint: .isDirectory)
         try? FileManager.default.createDirectory(at: root, withIntermediateDirectories: true)
-        return root.appending(path: "ReadingIndexes", directoryHint: .isDirectory)
+        return root
     }
 }

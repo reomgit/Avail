@@ -12,6 +12,7 @@ final class LibraryStoreTests: XCTestCase {
     private var defaults: UserDefaults!
     private var locationStore: LibraryLocationStore!
     private var container: ModelContainer!
+    private var artworkStore: ArtworkStore!
     private var store: LibraryStore!
     private var trashedURLs: [URL] = []
 
@@ -139,6 +140,43 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertTrue(try store.books().isEmpty)
     }
 
+    func testMetadataPersistsValidCoverArtwork() async throws {
+        try prepareStore()
+        let source = sourceURL.appending(path: "Cover.epub")
+        try Data("book".utf8).write(to: source)
+        guard case let .created(bookID) = try await store.importBook(from: source) else {
+            return XCTFail("Expected a new record")
+        }
+
+        try await store.applyMetadata(
+            BookMetadata(title: "Cover Book", coverData: Self.validPNG),
+            bookID: bookID
+        )
+
+        let relativePath = try XCTUnwrap(store.book(id: bookID)?.coverRelativePath)
+        let fileURL = try XCTUnwrap(artworkStore.fileURL(for: relativePath))
+        XCTAssertEqual(try Data(contentsOf: fileURL), Self.validPNG)
+    }
+
+    func testRemovingBookDeletesDerivedArtwork() async throws {
+        try prepareStore()
+        let source = sourceURL.appending(path: "Cover.epub")
+        try Data("book".utf8).write(to: source)
+        guard case let .created(bookID) = try await store.importBook(from: source) else {
+            return XCTFail("Expected a new record")
+        }
+        try await store.applyMetadata(
+            BookMetadata(title: "Cover Book", coverData: Self.validPNG),
+            bookID: bookID
+        )
+        let relativePath = try XCTUnwrap(store.book(id: bookID)?.coverRelativePath)
+        let fileURL = try XCTUnwrap(artworkStore.fileURL(for: relativePath))
+
+        try await store.remove(bookID: bookID, mode: .recordOnly)
+
+        XCTAssertFalse(FileManager.default.fileExists(atPath: fileURL.path))
+    }
+
     func testFailedRelocationPreservesOriginalBookmarkAndFiles() async throws {
         try prepareStore()
         let source = sourceURL.appending(path: "Book.epub")
@@ -169,9 +207,11 @@ final class LibraryStoreTests: XCTestCase {
             for: LibraryBookRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
+        artworkStore = ArtworkStore(rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory))
         store = LibraryStore(
             modelContainer: container,
             locationStore: locationStore,
+            artworkStore: artworkStore,
             trashHandler: { [weak self] url in self?.trashedURLs.append(url) }
         )
     }
@@ -182,4 +222,8 @@ final class LibraryStoreTests: XCTestCase {
         try Data("application/epub+zip".utf8).write(to: package.appending(path: "mimetype"))
         return package
     }
+
+    private static let validPNG = Data(
+        base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )!
 }

@@ -110,7 +110,7 @@ final class IndexingCoordinator: IndexingPrioritizing {
                 try Task.checkCancellation()
                 switch event {
                 case let .metadata(metadata):
-                    try libraryStore.applyMetadata(metadata, bookID: bookID)
+                    try await libraryStore.applyMetadata(metadata, bookID: bookID)
                 case let .batch(batch):
                     try await indexStore.commit(batch, bookID: bookID)
                     let committed = try await indexStore.manifest(bookID: bookID)

@@ -28,12 +28,14 @@ final class LibraryStore {
 
     private let context: ModelContext
     private let locationStore: LibraryLocationStore
+    private let artworkStore: ArtworkStore
     private let fileService: LibraryFileService
     private let trashHandler: TrashHandler
 
     init(
         modelContainer: ModelContainer,
         locationStore: LibraryLocationStore,
+        artworkStore: ArtworkStore,
         fileService: LibraryFileService = LibraryFileService(),
         trashHandler: @escaping TrashHandler = { url in
             try FileManager.default.trashItem(at: url, resultingItemURL: nil)
@@ -41,6 +43,7 @@ final class LibraryStore {
     ) {
         self.context = ModelContext(modelContainer)
         self.locationStore = locationStore
+        self.artworkStore = artworkStore
         self.fileService = fileService
         self.trashHandler = trashHandler
     }
@@ -65,11 +68,14 @@ final class LibraryStore {
         return LibraryBookAccess(url: url, lease: lease)
     }
 
-    func applyMetadata(_ metadata: BookMetadata, bookID: UUID) throws {
+    func applyMetadata(_ metadata: BookMetadata, bookID: UUID) async throws {
         guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
         record.title = metadata.title
         record.author = metadata.authors.first
         record.languageCode = metadata.languageCode
+        if let coverRelativePath = await artworkStore.persist(metadata.coverData, bookID: bookID) {
+            record.coverRelativePath = coverRelativePath
+        }
         record.updatedAt = Date()
         try context.save()
     }
@@ -201,6 +207,7 @@ final class LibraryStore {
         }
         context.delete(record)
         try context.save()
+        await artworkStore.remove(bookID: bookID)
     }
 
     func relocate(to destination: URL) async throws {

@@ -102,7 +102,13 @@ private final class ZenFixture {
             for: LibraryBookRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
-        libraryStore = LibraryStore(modelContainer: container, locationStore: location)
+        libraryStore = LibraryStore(
+            modelContainer: container,
+            locationStore: location,
+            artworkStore: ArtworkStore(
+                rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
+            )
+        )
         let source = sandbox.appending(path: "Zen.pdf")
         try Data("zen-book".utf8).write(to: source)
         guard case let .created(createdID) = try await libraryStore.importBook(from: source) else {
