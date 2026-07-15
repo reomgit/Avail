@@ -17,7 +17,7 @@ body:
     id: macos
     attributes:
       label: macOS version and Mac model
-      placeholder: macOS 14.7, MacBook Air (M2)
+      placeholder: macOS 26.0, MacBook Air (M4)
     validations:
       required: true
   - type: dropdown

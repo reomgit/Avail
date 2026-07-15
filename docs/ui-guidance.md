@@ -1,6 +1,6 @@
-# Avail UI Guidance
+# Avail macOS 26 UI Guidance
 
-This document records the Apple documentation consulted through Context7 before UI implementation and the project decisions derived from it.
+This document records the native macOS 26 structure used by the Xcode application target.
 
 ## Native library window — 2026-07-15
 
@@ -14,17 +14,32 @@ Sources:
 - [HIG: Color](https://developer.apple.com/design/human-interface-guidelines/color)
 - [HIG: Search fields](https://developer.apple.com/design/human-interface-guidelines/search-fields)
 - [HIG: Windows](https://developer.apple.com/design/human-interface-guidelines/windows)
+- [Build a SwiftUI app with the new design](https://developer.apple.com/videos/play/wwdc2025/323/)
+- [GlassEffectContainer](https://developer.apple.com/documentation/swiftui/glasseffectcontainer)
+- [ToolbarSpacer](https://developer.apple.com/documentation/swiftui/toolbarspacer)
 
 Decisions:
 
 - Use `NavigationSplitView` with explicit, stable selection and a native `.sidebar` list. Sidebar rows stay flat and concise; book metadata belongs in the content pane.
 - Use the system `fileImporter` for both library-folder selection and multi-book EPUB/PDF import. Security-scoped URLs are opened only for the duration of import or bookmark creation.
-- Expose Import, playback, and Open Zen through visible toolbar controls and scene commands with standard keyboard shortcuts.
+- Keep a `NavigationStack` in the detail column so a cover pushes a Books-style page with the native Back action.
+- Keep the application-wide player visible on collection and detail routes. Browsing never changes narration; only Listen, Continue, or a chapter action does.
+- Let the native split view, sidebar, search, toolbar, sheets, menus, and inspector supply system glass. Use one custom `GlassEffectContainer` only for the player’s coherent metadata, transport, and progress cluster.
+- Expose Import, playback, and Open Zen through visible toolbar controls and scene commands with standard keyboard shortcuts. Use `ToolbarSpacer` to preserve native grouping.
 - Use `ContentUnavailableView` for first run and empty collections, and `ProgressView` for copying/indexing without inventing custom progress chrome.
 - Use semantic foreground styles, system selection, SF Symbols plus text, and accessibility values so state never depends on color alone.
 - Keep the main window resizable with only minimum dimensions. Open the focused reader through a value-driven `WindowGroup` using `OpenWindowAction`.
 
-## Option B Zen window — 2026-07-15
+## Apple Books-style detail — 2026-07-16
+
+Decisions:
+
+- Lead with cover artwork, title, author, format/state, progress, Listen/Continue, Open Zen, and a standard More menu.
+- Keep covers, chapter rows, and reading content on the content canvas. Custom glass is reserved for the primary actions and persistent transport surface.
+- Use `backgroundExtensionEffect` only behind the constrained artwork hero; it must not determine page geometry.
+- Show committed chapters during preparation and start narration at the selected chapter’s first speakable chunk.
+
+## Zen window — 2026-07-16
 
 Sources:
 
@@ -38,10 +53,11 @@ Sources:
 Decisions:
 
 - Define Zen as a value-driven `WindowGroup` keyed by the persistent book UUID so macOS can restore the window and its represented book.
-- Implement the approved Option B layout exactly as an `HSplitView`: flexible long-form content on the left and a persistent playback inspector with a 280-point minimum width on the right.
+- Implement the approved Option B layout with SwiftUI’s trailing `.inspector`: flexible long-form content on the left and native inspector presentation on the right.
 - Preserve standard window chrome, resize behavior, system appearance, and state restoration. The reader is focused through hierarchy and typography, not a borderless or fixed dark theme.
 - Use a system serif font for book text. Emphasize the spoken range with both a semantic background and an underline so the cue is not color-only.
-- Publish scene-wide playback actions with `focusedSceneValue`; keep the same actions available through visible standard controls.
+- Put cover, metadata, chapter, progress, voice, speed, and shared playback controls in the inspector. Glass is limited to the transport cluster.
+- Publish scene-wide playback actions with `focusedSceneValue`; keep the same actions available through visible standard controls. Closing Zen never stops playback.
 - Automatic follow scrolls only while follow mode is active. A manual scroll suspends follow and reveals Return to Narration. Reduce Motion disables animated recentering.
 
 ## Settings and recovery — 2026-07-15

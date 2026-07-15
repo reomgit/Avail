@@ -35,19 +35,17 @@ final class BookArtworkViewTests: XCTestCase {
         let card = BookCardView(
             book: book,
             artworkURL: nil,
-            isSelected: true,
             isPlayable: true,
-            select: {},
+            openBook: {},
             play: {},
             openZen: {}
         )
         let grid = LibraryGridView(
             books: [book],
-            selection: .constant(book.id),
+            openBook: { _ in },
             canPlay: { _ in true },
             play: { _ in },
             openZen: { _ in },
-            bottomContentInset: 118,
             artworkURL: { _ in nil }
         )
 

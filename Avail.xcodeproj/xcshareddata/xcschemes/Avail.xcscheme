@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Scheme
+   LastUpgradeVersion = "2620"
+   version = "1.7">
+   <BuildAction
+      parallelizeBuildables = "YES"
+      buildImplicitDependencies = "YES"
+      buildArchitectures = "Automatic">
+      <BuildActionEntries>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="AF416F9D3007C09600019119" BuildableName="Avail.app" BlueprintName="Avail" ReferencedContainer="container:Avail.xcodeproj"/>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000001" BuildableName="libAvailCore.a" BlueprintName="AvailCore" ReferencedContainer="container:Avail.xcodeproj"/>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000002" BuildableName="libAvailPlayback.a" BlueprintName="AvailPlayback" ReferencedContainer="container:Avail.xcodeproj"/>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000003" BuildableName="libAvailEPUB.a" BlueprintName="AvailEPUB" ReferencedContainer="container:Avail.xcodeproj"/>
+         </BuildActionEntry>
+         <BuildActionEntry buildForTesting="YES" buildForRunning="YES" buildForProfiling="YES" buildForArchiving="YES" buildForAnalyzing="YES">
+            <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000004" BuildableName="libAvailPDF.a" BlueprintName="AvailPDF" ReferencedContainer="container:Avail.xcodeproj"/>
+         </BuildActionEntry>
+      </BuildActionEntries>
+   </BuildAction>
+   <TestAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" shouldUseLaunchSchemeArgsEnv="YES">
+      <Testables>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000005" BuildableName="AvailAppTests.xctest" BlueprintName="AvailAppTests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000006" BuildableName="AvailCoreTests.xctest" BlueprintName="AvailCoreTests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000007" BuildableName="AvailPlaybackTests.xctest" BlueprintName="AvailPlaybackTests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000008" BuildableName="AvailEPUBTests.xctest" BlueprintName="AvailEPUBTests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B10000000000000000000009" BuildableName="AvailPDFTests.xctest" BlueprintName="AvailPDFTests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+         <TestableReference skipped="NO"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="B1000000000000000000000A" BuildableName="AvailUITests.xctest" BlueprintName="AvailUITests" ReferencedContainer="container:Avail.xcodeproj"/></TestableReference>
+      </Testables>
+      <MacroExpansion>
+         <BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="AF416F9D3007C09600019119" BuildableName="Avail.app" BlueprintName="Avail" ReferencedContainer="container:Avail.xcodeproj"/>
+      </MacroExpansion>
+   </TestAction>
+   <LaunchAction buildConfiguration="Debug" selectedDebuggerIdentifier="Xcode.DebuggerFoundation.Debugger.LLDB" selectedLauncherIdentifier="Xcode.DebuggerFoundation.Launcher.LLDB" launchStyle="0" useCustomWorkingDirectory="NO" ignoresPersistentStateOnLaunch="NO" debugDocumentVersioning="YES" debugServiceExtension="internal" allowLocationSimulation="YES">
+      <BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="AF416F9D3007C09600019119" BuildableName="Avail.app" BlueprintName="Avail" ReferencedContainer="container:Avail.xcodeproj"/></BuildableProductRunnable>
+   </LaunchAction>
+   <ProfileAction buildConfiguration="Release" shouldUseLaunchSchemeArgsEnv="YES" savedToolIdentifier="" useCustomWorkingDirectory="NO" debugDocumentVersioning="YES">
+      <BuildableProductRunnable runnableDebuggingMode="0"><BuildableReference BuildableIdentifier="primary" BlueprintIdentifier="AF416F9D3007C09600019119" BuildableName="Avail.app" BlueprintName="Avail" ReferencedContainer="container:Avail.xcodeproj"/></BuildableProductRunnable>
+   </ProfileAction>
+   <AnalyzeAction buildConfiguration="Debug"/>
+   <ArchiveAction buildConfiguration="Release" revealArchiveInOrganizer="YES"/>
+</Scheme>

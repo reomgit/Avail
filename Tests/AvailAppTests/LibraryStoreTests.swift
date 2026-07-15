@@ -194,6 +194,63 @@ final class LibraryStoreTests: XCTestCase {
         }
     }
 
+    func testExistingBookmarkKeyReopensTheSelectedLibrary() throws {
+        let defaults = UserDefaults(suiteName: "AvailBookmarkCompatibility-\(UUID().uuidString)")!
+        let original = LibraryLocationStore(
+            defaults: defaults,
+            creationOptions: [],
+            resolutionOptions: []
+        )
+        try original.select(libraryURL)
+
+        let reopened = LibraryLocationStore(
+            defaults: defaults,
+            creationOptions: [],
+            resolutionOptions: []
+        )
+
+        XCTAssertNotNil(defaults.data(forKey: "librarySecurityScopedBookmark"))
+        XCTAssertEqual(
+            try reopened.resolve()?.standardizedFileURL,
+            libraryURL.standardizedFileURL
+        )
+    }
+
+    func testExistingSwiftDataRecordReopensWithoutMigration() throws {
+        let storeURL = sandbox.appending(path: "ExistingLibrary.store")
+        let bookID = UUID()
+
+        do {
+            let existingContainer = try ModelContainer(
+                for: LibraryBookRecord.self,
+                configurations: ModelConfiguration(url: storeURL)
+            )
+            let context = ModelContext(existingContainer)
+            context.insert(
+                LibraryBookRecord(
+                    id: bookID,
+                    fingerprint: "existing-record",
+                    relativePath: "Existing.epub",
+                    title: "Existing Library Book",
+                    format: .epub,
+                    state: .ready
+                )
+            )
+            try context.save()
+        }
+
+        let reopenedContainer = try ModelContainer(
+            for: LibraryBookRecord.self,
+            configurations: ModelConfiguration(url: storeURL)
+        )
+        let records = try ModelContext(reopenedContainer).fetch(
+            FetchDescriptor<LibraryBookRecord>()
+        )
+
+        XCTAssertEqual(records.map(\.id), [bookID])
+        XCTAssertEqual(records.first?.title, "Existing Library Book")
+    }
+
     private func prepareStore() throws {
         trashedURLs = []
         defaults = UserDefaults(suiteName: "AvailLibraryTests-\(UUID().uuidString)")!

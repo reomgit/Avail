@@ -63,6 +63,36 @@ final class ZenViewModelTests: XCTestCase {
         XCTAssertEqual(reopened.chunks.map(\.id), fixture.chunks.map(\.id))
     }
 
+    func testSelectingChapterStartsZenBookWithoutAnActiveSession() async throws {
+        fixture = try await ZenFixture(sandbox: sandbox)
+        let model = fixture.makeModel()
+        await model.load()
+
+        model.selectChapter(fixture.chunks[1].sectionID)
+        let didStartChapter = await waitUntil {
+            fixture.playback.currentBookID == fixture.bookID
+                && fixture.engine.spoken.last?.chunk.id == fixture.chunks[1].id
+        }
+
+        XCTAssertTrue(didStartChapter)
+    }
+
+    func testSelectingChapterSwitchesFromAnotherActiveBookToZenBook() async throws {
+        fixture = try await ZenFixture(sandbox: sandbox)
+        let other = try await fixture.addBook(named: "Other")
+        let model = fixture.makeModel()
+        await model.load()
+        await fixture.playback.play(bookID: other.bookID)
+
+        model.selectChapter(fixture.chunks[1].sectionID)
+        let didSwitchChapter = await waitUntil {
+            fixture.playback.currentBookID == fixture.bookID
+                && fixture.engine.spoken.last?.chunk.id == fixture.chunks[1].id
+        }
+
+        XCTAssertTrue(didSwitchChapter)
+    }
+
     func testActivePlaybackSharesChapterPresentationBeforeZenContentLoads() async throws {
         fixture = try await ZenFixture(sandbox: sandbox)
         let model = fixture.makeModel()
@@ -126,10 +156,25 @@ final class ZenViewModelTests: XCTestCase {
         await Task.yield()
         try? await Task.sleep(for: .milliseconds(2))
     }
+
+    private func waitUntil(
+        timeout: Duration = .seconds(1),
+        condition: () -> Bool
+    ) async -> Bool {
+        let clock = ContinuousClock()
+        let deadline = clock.now.advanced(by: timeout)
+        while !condition() {
+            guard clock.now < deadline else { return false }
+            await Task.yield()
+            try? await Task.sleep(for: .milliseconds(5))
+        }
+        return true
+    }
 }
 
 @MainActor
 private final class ZenFixture {
+    let sandbox: URL
     let libraryStore: LibraryStore
     let indexStore: ReadingIndexStore
     let engine = ZenFakeNarrationEngine()
@@ -141,6 +186,7 @@ private final class ZenFixture {
     )!
 
     init(sandbox: URL) async throws {
+        self.sandbox = sandbox
         let libraryURL = sandbox.appending(path: "Library", directoryHint: .isDirectory)
         try FileManager.default.createDirectory(at: libraryURL, withIntermediateDirectories: true)
         let defaults = UserDefaults(suiteName: "AvailZenFixture-\(UUID().uuidString)")!
@@ -215,6 +261,45 @@ private final class ZenFixture {
         )
     }
 
+    func addBook(named name: String) async throws -> (bookID: UUID, chunks: [SpeechChunk]) {
+        let source = sandbox.appending(path: "\(name)-\(UUID().uuidString).pdf")
+        try Data(name.utf8).write(to: source)
+        guard case let .created(createdID) = try await libraryStore.importBook(from: source) else {
+            throw CocoaError(.fileWriteUnknown)
+        }
+
+        let locator = SourceLocator.pdf(pageIndex: 0)
+        let sectionID = StableIdentifier.make(
+            bookID: createdID,
+            kind: "section",
+            locator: locator,
+            ordinal: 0
+        )
+        let chunk = Self.chunk(
+            sectionID: sectionID,
+            locator: locator,
+            ordinal: 0,
+            text: "A separate book is already playing."
+        )
+        let section = ReadingSection(
+            id: sectionID,
+            ordinal: 0,
+            title: "Other Chapter",
+            locator: locator,
+            chunkIDs: [chunk.id]
+        )
+        try await indexStore.commit(
+            IndexBatch(ordinal: 0, sections: [section], chunks: [chunk], resumeLocator: locator),
+            bookID: createdID
+        )
+        try await indexStore.markComplete(bookID: createdID)
+        try libraryStore.applyIndexManifest(
+            try await indexStore.manifest(bookID: createdID),
+            bookID: createdID
+        )
+        return (createdID, [chunk])
+    }
+
     private static func chunk(
         sectionID: UUID,
         locator: SourceLocator,
@@ -238,9 +323,10 @@ private final class ZenFakeNarrationEngine: NarrationEngine {
     let voices = [NarrationVoice(id: "voice.en", name: "Local English", languageCode: "en-US")]
     let events: AsyncStream<NarrationEvent>
     private let continuation: AsyncStream<NarrationEvent>.Continuation
+    private(set) var spoken: [NarrationRequest] = []
     private(set) var stopCallCount = 0
     init() { (events, continuation) = AsyncStream.makeStream(of: NarrationEvent.self) }
-    func speak(_ request: NarrationRequest) {}
+    func speak(_ request: NarrationRequest) { spoken.append(request) }
     func pause() {}
     func resume() {}
     func stop() { stopCallCount += 1 }

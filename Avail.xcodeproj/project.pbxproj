@@ -1,0 +1,309 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		B50000000000000000000001 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000002 /* libAvailPlayback.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000002 /* libAvailPlayback.a */; };
+		B50000000000000000000003 /* libAvailEPUB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000003 /* libAvailEPUB.a */; };
+		B50000000000000000000004 /* libAvailPDF.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000004 /* libAvailPDF.a */; };
+		B50000000000000000000005 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000001 /* ZIPFoundation */; };
+		B50000000000000000000006 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000002 /* SwiftSoup */; };
+		B50000000000000000000007 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000008 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000009 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000001 /* ZIPFoundation */; };
+		B5000000000000000000000A /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000002 /* SwiftSoup */; };
+		B5000000000000000000000B /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B5000000000000000000000C /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B5000000000000000000000D /* libAvailPlayback.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000002 /* libAvailPlayback.a */; };
+		B5000000000000000000000E /* libAvailEPUB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000003 /* libAvailEPUB.a */; };
+		B5000000000000000000000F /* libAvailPDF.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000004 /* libAvailPDF.a */; };
+		B50000000000000000000010 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000001 /* ZIPFoundation */; };
+		B50000000000000000000011 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000002 /* SwiftSoup */; };
+		B50000000000000000000012 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000013 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000014 /* libAvailPlayback.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000002 /* libAvailPlayback.a */; };
+		B50000000000000000000015 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B50000000000000000000016 /* libAvailEPUB.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000003 /* libAvailEPUB.a */; };
+		B50000000000000000000017 /* ZIPFoundation in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000001 /* ZIPFoundation */; };
+		B50000000000000000000018 /* SwiftSoup in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000002 /* SwiftSoup */; };
+		B50000000000000000000019 /* libAvailCore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000001 /* libAvailCore.a */; };
+		B5000000000000000000001A /* libAvailPDF.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000004 /* libAvailPDF.a */; };
+		B5000000000000000000001B /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000B /* LICENSE */; };
+		B5000000000000000000001C /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		B60000000000000000000001 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000002 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000002; remoteInfo = AvailPlayback; };
+		B60000000000000000000003 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000003; remoteInfo = AvailEPUB; };
+		B60000000000000000000004 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000004; remoteInfo = AvailPDF; };
+		B60000000000000000000005 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000006 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000007 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000008 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000009 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000002; remoteInfo = AvailPlayback; };
+		B6000000000000000000000A = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000003; remoteInfo = AvailEPUB; };
+		B6000000000000000000000B = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000004; remoteInfo = AvailPDF; };
+		B6000000000000000000000C = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B6000000000000000000000D = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B6000000000000000000000E = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000002; remoteInfo = AvailPlayback; };
+		B6000000000000000000000F = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000010 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000003; remoteInfo = AvailEPUB; };
+		B60000000000000000000011 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
+		B60000000000000000000012 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000004; remoteInfo = AvailPDF; };
+		B60000000000000000000013 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = AF416F9D3007C09600019119; remoteInfo = Avail; };
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		AF416F9E3007C09600019119 /* Avail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Avail.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000001 /* libAvailCore.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAvailCore.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000002 /* libAvailPlayback.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAvailPlayback.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000003 /* libAvailEPUB.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAvailEPUB.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000004 /* libAvailPDF.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libAvailPDF.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000005 /* AvailAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000006 /* AvailCoreTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailCoreTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000007 /* AvailPlaybackTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailPlaybackTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000008 /* AvailEPUBTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailEPUBTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B30000000000000000000009 /* AvailPDFTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailPDFTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3000000000000000000000A /* AvailUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3000000000000000000000B /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
+		B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Packaging/THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFileSystemSynchronizedRootGroup section */
+		AF416FA03007C09600019119 /* Avail */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Avail; sourceTree = "<group>"; };
+		B20000000000000000000001 /* AvailCore */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailCore; sourceTree = "<group>"; };
+		B20000000000000000000002 /* AvailPlayback */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailPlayback; sourceTree = "<group>"; };
+		B20000000000000000000003 /* AvailEPUB */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailEPUB; sourceTree = "<group>"; };
+		B20000000000000000000004 /* AvailPDF */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailPDF; sourceTree = "<group>"; };
+		B20000000000000000000005 /* AvailAppTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailAppTests; sourceTree = "<group>"; };
+		B20000000000000000000006 /* AvailCoreTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailCoreTests; sourceTree = "<group>"; };
+		B20000000000000000000007 /* AvailPlaybackTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailPlaybackTests; sourceTree = "<group>"; };
+		B20000000000000000000008 /* AvailEPUBTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailEPUBTests; sourceTree = "<group>"; };
+		B20000000000000000000009 /* AvailPDFTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailPDFTests; sourceTree = "<group>"; };
+		B2000000000000000000000A /* AvailUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailUITests; sourceTree = "<group>"; };
+/* End PBXFileSystemSynchronizedRootGroup section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		AF416F9B3007C09600019119 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000001, B50000000000000000000002, B50000000000000000000003, B50000000000000000000004, B50000000000000000000005, B50000000000000000000006, ); };
+		B40000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = ( ); };
+		B40000000000000000000004 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000007, ); };
+		B40000000000000000000006 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000008, B50000000000000000000009, B5000000000000000000000A, ); };
+		B40000000000000000000008 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B5000000000000000000000B, ); };
+		B4000000000000000000000A /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = ( ); };
+		B4000000000000000000000D /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000012, ); };
+		B40000000000000000000010 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000013, B50000000000000000000014, ); };
+		B40000000000000000000013 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000015, B50000000000000000000016, B50000000000000000000017, B50000000000000000000018, ); };
+		B40000000000000000000016 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000019, B5000000000000000000001A, ); };
+		B40000000000000000000019 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = ( ); };
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		AF416F953007C09600019119 = {
+			isa = PBXGroup;
+			children = (
+				AF416FA03007C09600019119 /* Avail */,
+				B20000000000000000000001 /* AvailCore */,
+				B20000000000000000000002 /* AvailPlayback */,
+				B20000000000000000000003 /* AvailEPUB */,
+				B20000000000000000000004 /* AvailPDF */,
+				B20000000000000000000005 /* AvailAppTests */,
+				B20000000000000000000006 /* AvailCoreTests */,
+				B20000000000000000000007 /* AvailPlaybackTests */,
+				B20000000000000000000008 /* AvailEPUBTests */,
+				B20000000000000000000009 /* AvailPDFTests */,
+				B2000000000000000000000A /* AvailUITests */,
+				B3000000000000000000000B /* LICENSE */,
+				B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */,
+				AF416F9F3007C09600019119 /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AF416F9F3007C09600019119 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				AF416F9E3007C09600019119 /* Avail.app */,
+				B30000000000000000000001 /* libAvailCore.a */,
+				B30000000000000000000002 /* libAvailPlayback.a */,
+				B30000000000000000000003 /* libAvailEPUB.a */,
+				B30000000000000000000004 /* libAvailPDF.a */,
+				B30000000000000000000005 /* AvailAppTests.xctest */,
+				B30000000000000000000006 /* AvailCoreTests.xctest */,
+				B30000000000000000000007 /* AvailPlaybackTests.xctest */,
+				B30000000000000000000008 /* AvailEPUBTests.xctest */,
+				B30000000000000000000009 /* AvailPDFTests.xctest */,
+				B3000000000000000000000A /* AvailUITests.xctest */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		AF416F9D3007C09600019119 /* Avail */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AF416FA93007C09800019119;
+			buildPhases = (AF416F9A3007C09600019119, AF416F9B3007C09600019119, AF416F9C3007C09600019119, );
+			buildRules = ( );
+			dependencies = (B70000000000000000000001, B70000000000000000000002, B70000000000000000000003, B70000000000000000000004, );
+			fileSystemSynchronizedGroups = (AF416FA03007C09600019119, );
+			name = Avail;
+			packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, );
+			productName = Avail;
+			productReference = AF416F9E3007C09600019119;
+			productType = "com.apple.product-type.application";
+		};
+		B10000000000000000000001 /* AvailCore */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000001; buildPhases = (B40000000000000000000001, B40000000000000000000002, ); buildRules = ( ); dependencies = ( ); fileSystemSynchronizedGroups = (B20000000000000000000001, ); name = AvailCore; productName = AvailCore; productReference = B30000000000000000000001; productType = "com.apple.product-type.library.static"; };
+		B10000000000000000000002 /* AvailPlayback */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000002; buildPhases = (B40000000000000000000003, B40000000000000000000004, ); buildRules = ( ); dependencies = (B70000000000000000000005, ); fileSystemSynchronizedGroups = (B20000000000000000000002, ); name = AvailPlayback; productName = AvailPlayback; productReference = B30000000000000000000002; productType = "com.apple.product-type.library.static"; };
+		B10000000000000000000003 /* AvailEPUB */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000003; buildPhases = (B40000000000000000000005, B40000000000000000000006, ); buildRules = ( ); dependencies = (B70000000000000000000006, ); fileSystemSynchronizedGroups = (B20000000000000000000003, ); name = AvailEPUB; packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, ); productName = AvailEPUB; productReference = B30000000000000000000003; productType = "com.apple.product-type.library.static"; };
+		B10000000000000000000004 /* AvailPDF */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000004; buildPhases = (B40000000000000000000007, B40000000000000000000008, ); buildRules = ( ); dependencies = (B70000000000000000000007, ); fileSystemSynchronizedGroups = (B20000000000000000000004, ); name = AvailPDF; productName = AvailPDF; productReference = B30000000000000000000004; productType = "com.apple.product-type.library.static"; };
+		B10000000000000000000005 /* AvailAppTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000005; buildPhases = (B40000000000000000000009, B4000000000000000000000A, B4000000000000000000000B, ); buildRules = ( ); dependencies = (B70000000000000000000008, B70000000000000000000009, B7000000000000000000000A, B7000000000000000000000B, B7000000000000000000000C, ); fileSystemSynchronizedGroups = (B20000000000000000000005, ); name = AvailAppTests; packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, ); productName = AvailAppTests; productReference = B30000000000000000000005; productType = "com.apple.product-type.bundle.unit-test"; };
+		B10000000000000000000006 /* AvailCoreTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000006; buildPhases = (B4000000000000000000000C, B4000000000000000000000D, B4000000000000000000000E, ); buildRules = ( ); dependencies = (B7000000000000000000000D, ); fileSystemSynchronizedGroups = (B20000000000000000000006, ); name = AvailCoreTests; productName = AvailCoreTests; productReference = B30000000000000000000006; productType = "com.apple.product-type.bundle.unit-test"; };
+		B10000000000000000000007 /* AvailPlaybackTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000007; buildPhases = (B4000000000000000000000F, B40000000000000000000010, B40000000000000000000011, ); buildRules = ( ); dependencies = (B7000000000000000000000E, B7000000000000000000000F, ); fileSystemSynchronizedGroups = (B20000000000000000000007, ); name = AvailPlaybackTests; productName = AvailPlaybackTests; productReference = B30000000000000000000007; productType = "com.apple.product-type.bundle.unit-test"; };
+		B10000000000000000000008 /* AvailEPUBTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000008; buildPhases = (B40000000000000000000012, B40000000000000000000013, B40000000000000000000014, ); buildRules = ( ); dependencies = (B70000000000000000000010, B70000000000000000000011, ); fileSystemSynchronizedGroups = (B20000000000000000000008, ); name = AvailEPUBTests; packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, ); productName = AvailEPUBTests; productReference = B30000000000000000000008; productType = "com.apple.product-type.bundle.unit-test"; };
+		B10000000000000000000009 /* AvailPDFTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000009; buildPhases = (B40000000000000000000015, B40000000000000000000016, B40000000000000000000017, ); buildRules = ( ); dependencies = (B70000000000000000000012, B70000000000000000000013, ); fileSystemSynchronizedGroups = (B20000000000000000000009, ); name = AvailPDFTests; productName = AvailPDFTests; productReference = B30000000000000000000009; productType = "com.apple.product-type.bundle.unit-test"; };
+		B1000000000000000000000A /* AvailUITests */ = {isa = PBXNativeTarget; buildConfigurationList = B8100000000000000000000A; buildPhases = (B40000000000000000000018, B40000000000000000000019, B4000000000000000000001A, ); buildRules = ( ); dependencies = (B70000000000000000000014, ); fileSystemSynchronizedGroups = (B2000000000000000000000A, ); name = AvailUITests; productName = AvailUITests; productReference = B3000000000000000000000A; productType = "com.apple.product-type.bundle.ui-testing"; };
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		AF416F963007C09600019119 /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = 1;
+				LastSwiftUpdateCheck = 2620;
+				LastUpgradeCheck = 2620;
+				TargetAttributes = {
+					AF416F9D3007C09600019119 = {CreatedOnToolsVersion = 26.0; ProvisioningStyle = Automatic; };
+					B10000000000000000000001 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000002 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000003 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000004 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000005 = {CreatedOnToolsVersion = 26.0; TestTargetID = AF416F9D3007C09600019119; };
+					B10000000000000000000006 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000007 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000008 = {CreatedOnToolsVersion = 26.0; };
+					B10000000000000000000009 = {CreatedOnToolsVersion = 26.0; };
+					B1000000000000000000000A = {CreatedOnToolsVersion = 26.0; TestTargetID = AF416F9D3007C09600019119; };
+				};
+			};
+			buildConfigurationList = AF416F993007C09600019119;
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (en, Base, );
+			mainGroup = AF416F953007C09600019119;
+			minimizedProjectReferenceProxies = 1;
+			packageReferences = (B90000000000000000000001, B90000000000000000000002, );
+			preferredProjectObjectVersion = 77;
+			productRefGroup = AF416F9F3007C09600019119;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (AF416F9D3007C09600019119, B10000000000000000000001, B10000000000000000000002, B10000000000000000000003, B10000000000000000000004, B10000000000000000000005, B10000000000000000000006, B10000000000000000000007, B10000000000000000000008, B10000000000000000000009, B1000000000000000000000A, );
+		};
+/* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		AF416F9C3007C09600019119 /* Resources */ = {isa = PBXResourcesBuildPhase; files = (B5000000000000000000001B, B5000000000000000000001C, ); };
+		B4000000000000000000000B /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+		B4000000000000000000000E /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+		B40000000000000000000011 /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+		B40000000000000000000014 /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+		B40000000000000000000017 /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+		B4000000000000000000001A /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		AF416F9A3007C09600019119 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000005 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000007 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000009 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B4000000000000000000000C /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B4000000000000000000000F /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000012 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000015 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B40000000000000000000018 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		B70000000000000000000001 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000001; };
+		B70000000000000000000002 = {isa = PBXTargetDependency; target = B10000000000000000000002; targetProxy = B60000000000000000000002; };
+		B70000000000000000000003 = {isa = PBXTargetDependency; target = B10000000000000000000003; targetProxy = B60000000000000000000003; };
+		B70000000000000000000004 = {isa = PBXTargetDependency; target = B10000000000000000000004; targetProxy = B60000000000000000000004; };
+		B70000000000000000000005 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000005; };
+		B70000000000000000000006 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000006; };
+		B70000000000000000000007 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000007; };
+		B70000000000000000000008 = {isa = PBXTargetDependency; target = AF416F9D3007C09600019119; targetProxy = B60000000000000000000013; };
+		B70000000000000000000009 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000008; };
+		B7000000000000000000000A = {isa = PBXTargetDependency; target = B10000000000000000000002; targetProxy = B60000000000000000000009; };
+		B7000000000000000000000B = {isa = PBXTargetDependency; target = B10000000000000000000003; targetProxy = B6000000000000000000000A; };
+		B7000000000000000000000C = {isa = PBXTargetDependency; target = B10000000000000000000004; targetProxy = B6000000000000000000000B; };
+		B7000000000000000000000D = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B6000000000000000000000C; };
+		B7000000000000000000000E = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B6000000000000000000000D; };
+		B7000000000000000000000F = {isa = PBXTargetDependency; target = B10000000000000000000002; targetProxy = B6000000000000000000000E; };
+		B70000000000000000000010 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B6000000000000000000000F; };
+		B70000000000000000000011 = {isa = PBXTargetDependency; target = B10000000000000000000003; targetProxy = B60000000000000000000010; };
+		B70000000000000000000012 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000011; };
+		B70000000000000000000013 = {isa = PBXTargetDependency; target = B10000000000000000000004; targetProxy = B60000000000000000000012; };
+		B70000000000000000000014 = {isa = PBXTargetDependency; target = AF416F9D3007C09600019119; targetProxy = B60000000000000000000013; };
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		AF416FA73007C09800019119 /* Debug project */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = dwarf; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_TESTABILITY = YES; GCC_C_LANGUAGE_STANDARD = gnu17; GCC_OPTIMIZATION_LEVEL = 0; GCC_PREPROCESSOR_DEFINITIONS = ("DEBUG=1", "$(inherited)", ); MACOSX_DEPLOYMENT_TARGET = 26.0; ONLY_ACTIVE_ARCH = YES; SDKROOT = macosx; SWIFT_ACTIVE_COMPILATION_CONDITIONS = "DEBUG $(inherited)"; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; SWIFT_VERSION = 6.0; }; name = Debug; };
+		AF416FA83007C09800019119 /* Release project */ = {isa = XCBuildConfiguration; buildSettings = {ALWAYS_SEARCH_USER_PATHS = NO; ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES; CLANG_ENABLE_MODULES = YES; CLANG_ENABLE_OBJC_ARC = YES; COPY_PHASE_STRIP = NO; DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym"; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_NS_ASSERTIONS = NO; GCC_C_LANGUAGE_STANDARD = gnu17; MACOSX_DEPLOYMENT_TARGET = 26.0; SDKROOT = macosx; SWIFT_COMPILATION_MODE = wholemodule; SWIFT_VERSION = 6.0; }; name = Release; };
+		AF416FAA3007C09800019119 /* Debug Avail */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_ENTITLEMENTS = Configuration/Avail.entitlements; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; ENABLE_PREVIEWS = YES; ENABLE_USER_SELECTED_FILES = readwrite; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/Info.plist; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", ); MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.Avail; PRODUCT_MODULE_NAME = AvailApp; PRODUCT_NAME = Avail; REGISTER_APP_GROUPS = NO; SKIP_INSTALL = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		AF416FAB3007C09800019119 /* Release Avail */ = {isa = XCBuildConfiguration; buildSettings = {ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon; ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; CODE_SIGN_ENTITLEMENTS = Configuration/Avail.entitlements; CODE_SIGN_STYLE = Automatic; COMBINE_HIDPI_IMAGES = YES; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; ENABLE_USER_SELECTED_FILES = readwrite; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/Info.plist; LD_RUNPATH_SEARCH_PATHS = ("$(inherited)", "@executable_path/../Frameworks", ); MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.Avail; PRODUCT_MODULE_NAME = AvailApp; PRODUCT_NAME = Avail; REGISTER_APP_GROUPS = NO; SKIP_INSTALL = NO; SWIFT_EMIT_LOC_STRINGS = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000001 /* Debug AvailCore */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailCore; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000002 /* Release AvailCore */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailCore; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000003 /* Debug AvailPlayback */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailPlayback; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000004 /* Release AvailPlayback */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailPlayback; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000005 /* Debug AvailEPUB */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailEPUB; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000006 /* Release AvailEPUB */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailEPUB; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000007 /* Debug AvailPDF */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailPDF; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000008 /* Release AvailPDF */ = {isa = XCBuildConfiguration; buildSettings = {DEFINES_MODULE = YES; PRODUCT_NAME = AvailPDF; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000009 /* Debug AvailAppTests */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailAppTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Avail.app/Contents/MacOS/Avail"; }; name = Debug; };
+		B8000000000000000000000A /* Release AvailAppTests */ = {isa = XCBuildConfiguration; buildSettings = {BUNDLE_LOADER = "$(TEST_HOST)"; CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailAppTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_HOST = "$(BUILT_PRODUCTS_DIR)/Avail.app/Contents/MacOS/Avail"; }; name = Release; };
+		B8000000000000000000000B /* Debug AvailCoreTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailCoreTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B8000000000000000000000C /* Release AvailCoreTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailCoreTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Release; };
+		B8000000000000000000000D /* Debug AvailPlaybackTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailPlaybackTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B8000000000000000000000E /* Release AvailPlaybackTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailPlaybackTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Release; };
+		B8000000000000000000000F /* Debug AvailEPUBTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailEPUBTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000010 /* Release AvailEPUBTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailEPUBTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000011 /* Debug AvailPDFTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailPDFTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000012 /* Release AvailPDFTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailPDFTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Release; };
+		B80000000000000000000013 /* Debug AvailUITests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = Avail; }; name = Debug; };
+		B80000000000000000000014 /* Release AvailUITests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = Avail; }; name = Release; };
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		AF416F993007C09600019119 = {isa = XCConfigurationList; buildConfigurations = (AF416FA73007C09800019119, AF416FA83007C09800019119, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		AF416FA93007C09800019119 = {isa = XCConfigurationList; buildConfigurations = (AF416FAA3007C09800019119, AF416FAB3007C09800019119, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000001 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000001, B80000000000000000000002, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000002 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000003, B80000000000000000000004, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000003 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000005, B80000000000000000000006, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000004 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000007, B80000000000000000000008, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000005 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000009, B8000000000000000000000A, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000006 = {isa = XCConfigurationList; buildConfigurations = (B8000000000000000000000B, B8000000000000000000000C, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000007 = {isa = XCConfigurationList; buildConfigurations = (B8000000000000000000000D, B8000000000000000000000E, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000008 = {isa = XCConfigurationList; buildConfigurations = (B8000000000000000000000F, B80000000000000000000010, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B81000000000000000000009 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000011, B80000000000000000000012, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B8100000000000000000000A = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000013, B80000000000000000000014, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+/* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		B90000000000000000000001 /* ZIPFoundation */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/weichsel/ZIPFoundation.git"; requirement = {kind = upToNextMajorVersion; minimumVersion = 0.9.20; }; };
+		B90000000000000000000002 /* SwiftSoup */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/scinfu/SwiftSoup.git"; requirement = {kind = revision; revision = 83336847e47b2f499330c15426ad2fb180e72d9b; }; };
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		BA0000000000000000000001 /* ZIPFoundation */ = {isa = XCSwiftPackageProductDependency; package = B90000000000000000000001; productName = ZIPFoundation; };
+		BA0000000000000000000002 /* SwiftSoup */ = {isa = XCSwiftPackageProductDependency; package = B90000000000000000000002; productName = SwiftSoup; };
+/* End XCSwiftPackageProductDependency section */
+	};
+	rootObject = AF416F963007C09600019119 /* Project object */;
+}

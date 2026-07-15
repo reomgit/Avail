@@ -19,8 +19,11 @@ jobs:
       - name: Validate release version
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
-          PLIST_VERSION="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleShortVersionString' Packaging/Info.plist)"
+          PLIST_VERSION="$(xcodebuild -project Avail.xcodeproj -scheme Avail -configuration Release -showBuildSettings | awk -F ' = ' '/^[[:space:]]*MARKETING_VERSION = / { print $2; exit }')"
           test "${VERSION}" = "${PLIST_VERSION}"
+
+      - name: Resolve Xcode package dependencies
+        run: xcodebuild -resolvePackageDependencies -project Avail.xcodeproj -scheme Avail
 
       - name: Import Developer ID certificate
         env:
@@ -44,8 +47,22 @@ jobs:
           VERSION: ${{ github.ref_name }}
           BUILD_NUMBER: ${{ github.run_number }}
         run: |
-          VERSION="${VERSION#v}" bash Scripts/package-app.sh --arch universal --clean
-          bash Scripts/verify-app.sh
+          VERSION="${VERSION#v}"
+          mkdir -p dist
+          xcodebuild archive \
+            -project Avail.xcodeproj \
+            -scheme Avail \
+            -configuration Release \
+            -destination 'generic/platform=macOS' \
+            -archivePath "${PWD}/dist/Avail.xcarchive" \
+            ARCHS='arm64 x86_64' \
+            ONLY_ACTIVE_ARCH=NO \
+            MARKETING_VERSION="${VERSION}" \
+            CURRENT_PROJECT_VERSION="${BUILD_NUMBER}" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="${DEVELOPER_ID_APPLICATION}"
+          ditto "dist/Avail.xcarchive/Products/Applications/Avail.app" "dist/Avail.app"
+          EXPECTED_ARCHS='arm64 x86_64' bash Scripts/verify-app.sh dist/Avail.app
 
       - name: Prepare App Store Connect API key
         env:
@@ -61,7 +78,7 @@ jobs:
         env:
           APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_API_KEY_ID }}
           APP_STORE_CONNECT_API_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_API_ISSUER_ID }}
-        run: bash Scripts/notarize.sh
+        run: bash Scripts/notarize.sh dist/Avail.app
 
       - name: Assemble release artifacts
         run: |

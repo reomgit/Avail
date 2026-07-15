@@ -51,6 +51,34 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.engine.spoken.last?.chunk.id, secondBook.chunks[0].id)
     }
 
+    func testStartingAnotherBookAtAChapterUsesItsFirstSpeakableChunk() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
+        let secondBook = try await fixture.addBook(named: "Second", chunkWordCounts: [20, 20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        await fixture.coordinator.play(
+            bookID: secondBook.bookID,
+            startingAt: secondBook.chunks[1].sectionID
+        )
+
+        XCTAssertEqual(fixture.engine.stopCallCount, 1)
+        XCTAssertEqual(fixture.coordinator.currentBookID, secondBook.bookID)
+        XCTAssertEqual(fixture.engine.spoken.last?.chunk.id, secondBook.chunks[1].id)
+    }
+
+    func testStartingAtAChapterOverridesTheCurrentBookPosition() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        await fixture.coordinator.play(
+            bookID: fixture.bookID,
+            startingAt: fixture.chunks[1].sectionID
+        )
+
+        XCTAssertEqual(fixture.engine.stopCallCount, 1)
+        XCTAssertEqual(fixture.engine.spoken.last?.chunk.id, fixture.chunks[1].id)
+    }
+
     func testRangeUpdatesFollowHighlightAndDebouncedPersistenceWhilePauseFlushesImmediately() async throws {
         fixture = try await PlaybackFixture(
             sandbox: sandbox,
@@ -200,6 +228,24 @@ final class PlaybackCoordinatorTests: XCTestCase {
         await settle()
         fixture.coordinator.applicationWillTerminate()
         XCTAssertEqual(try fixture.libraryStore.book(id: fixture.bookID)?.utf16Offset, 14)
+    }
+
+    func testClearingActiveSessionStopsEngineAndResetsPlaybackContext() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        fixture.coordinator.clearSession(for: fixture.bookID)
+
+        XCTAssertEqual(fixture.engine.stopCallCount, 1)
+        XCTAssertEqual(fixture.coordinator.state, .stopped)
+        XCTAssertNil(fixture.coordinator.currentBookID)
+        XCTAssertNil(fixture.coordinator.currentChunk)
+        XCTAssertNil(fixture.coordinator.currentChapterTitle)
+        XCTAssertNil(fixture.coordinator.currentChapterNumber)
+        XCTAssertNil(fixture.coordinator.highlightedChunkID)
+        XCTAssertNil(fixture.coordinator.highlightRange)
+        XCTAssertEqual(fixture.coordinator.currentNormalizedWordOffset, 0)
+        XCTAssertEqual(fixture.nowPlaying.states.last, .stopped)
     }
 
     private func settle() async {

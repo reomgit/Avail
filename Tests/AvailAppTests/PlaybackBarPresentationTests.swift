@@ -105,6 +105,74 @@ final class PlaybackBarPresentationTests: XCTestCase {
         )
     }
 
+    func testPersistentPlayerUsesEmptyStateWithoutAnActiveOrResumableBook() {
+        let unplayed = makeBook()
+        unplayed.indexedWordCount = 1_000
+        unplayed.isIndexComplete = true
+
+        let context = PersistentPlayerContext.make(
+            books: [unplayed],
+            currentBookID: nil,
+            state: .stopped,
+            chapterTitle: nil
+        )
+
+        XCTAssertEqual(context.mode, .empty)
+        XCTAssertNil(context.book)
+        XCTAssertNil(context.presentation)
+    }
+
+    func testPersistentPlayerChoosesMostRecentlyPlayedValidBook() throws {
+        let older = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 10))
+        let newest = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 20))
+
+        let context = PersistentPlayerContext.make(
+            books: [newest, older],
+            currentBookID: nil,
+            state: .stopped,
+            chapterTitle: nil
+        )
+
+        XCTAssertEqual(context.mode, .resumable(newest.id))
+        XCTAssertTrue(context.book === newest)
+        XCTAssertEqual(context.presentation?.primaryActionLabel, "Play")
+    }
+
+    func testPersistentPlayerActiveSessionWinsWhileBrowsingAndKeepsTransientStatus() throws {
+        let active = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 10))
+        let browsed = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 20))
+
+        let context = PersistentPlayerContext.make(
+            books: [active, browsed],
+            currentBookID: active.id,
+            state: .bufferingForIndex,
+            chapterTitle: "Chapter 4"
+        )
+
+        XCTAssertEqual(context.mode, .active(active.id))
+        XCTAssertTrue(context.book === active)
+        XCTAssertEqual(context.presentation?.statusText, "Preparing the next passage…")
+    }
+
+    func testPersistentPlayerSkipsMissingAndStaleRecords() {
+        let missing = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 30))
+        missing.state = .missing
+        let failed = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 25))
+        failed.state = .failed
+        let fallback = makeResumableBook(updatedAt: Date(timeIntervalSince1970: 20))
+
+        let context = PersistentPlayerContext.make(
+            books: [missing, failed, fallback],
+            currentBookID: UUID(),
+            state: .failed("Stale session"),
+            chapterTitle: nil
+        )
+
+        XCTAssertEqual(context.mode, .resumable(fallback.id))
+        XCTAssertTrue(context.book === fallback)
+        XCTAssertNil(context.presentation?.statusText)
+    }
+
     private func makePresentation(
         state: PlaybackState,
         author: String? = "Test Author"
@@ -125,5 +193,14 @@ final class PlaybackBarPresentationTests: XCTestCase {
             format: .epub,
             state: .ready
         )
+    }
+
+    private func makeResumableBook(updatedAt: Date) -> LibraryBookRecord {
+        let book = makeBook()
+        book.indexedWordCount = 1_000
+        book.isIndexComplete = true
+        book.normalizedWordOffset = 250
+        book.positionUpdatedAt = updatedAt
+        return book
     }
 }

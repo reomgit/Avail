@@ -1,71 +1,89 @@
 # Releasing Avail
 
-Avail supports local ad hoc packages for contributors and Developer ID-signed, notarized universal packages for GitHub Releases. Ordinary debug builds do not require notarization.
+Avail uses the shared `Avail` Xcode scheme for local builds, archives, tests, profiling, and releases. Ordinary Debug builds do not require notarization. Public downloads are universal Developer ID-signed archives with the hardened runtime, notarization ticket, and staple.
 
-Apple requires the hardened runtime for notarized software distributed outside the Mac App Store; App Sandbox is optional for that channel. Avail deliberately enables both. The only file capabilities are app-scoped security bookmarks and user-selected read/write access. The app has no outgoing-network entitlement. These decisions follow Apple’s [distribution preparation](https://developer.apple.com/documentation/xcode/preparing-your-app-for-distribution), [App Sandbox entitlement](https://developer.apple.com/documentation/bundleresources/entitlements/com.apple.security.app-sandbox), and [notarization workflow](https://developer.apple.com/documentation/security/customizing-the-notarization-workflow) guidance, checked through Context7.
+The application is sandboxed with only app-scoped security bookmarks and user-selected read/write access. It deliberately has no outgoing-network entitlement.
 
-## Local package
+## Local Xcode archive
 
-Create and verify an ad hoc signed package:
+In Xcode, open `Avail.xcodeproj`, choose the `Avail` scheme and **Any Mac**, then use **Product > Archive**. Organizer contains the resulting `.xcarchive` and can reveal or distribute the `.app`.
+
+The equivalent command is:
 
 ```bash
-bash Scripts/package-app.sh --clean
-bash Scripts/verify-app.sh
-open dist/Avail.app
+xcodebuild archive \
+  -project Avail.xcodeproj \
+  -scheme Avail \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath "$PWD/dist/Avail.xcarchive" \
+  ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO
+
+EXPECTED_ARCHS='arm64 x86_64' \
+  bash Scripts/verify-app.sh dist/Avail.xcarchive/Products/Applications/Avail.app
 ```
 
-Use `--arch arm64`, `--arch x86_64`, or `--arch universal` to select the executable architecture. An ad hoc package is intended for local validation; it is not a trusted public distribution.
+This is local archive validation. Gatekeeper acceptance is required only for the Developer ID-signed and notarized public artifact.
 
-## Developer ID package
+## Developer ID archive
 
 Prerequisites:
 
 - Apple Developer Program membership
 - A `Developer ID Application` certificate in the active keychain
-- App Store Connect API credentials with notarization access, or a notarytool keychain profile
+- App Store Connect API credentials with notarization access, or a `notarytool` keychain profile
 
-Build, sign, submit, staple, and validate:
+Archive with the desired version and build number:
 
 ```bash
 export DEVELOPER_ID_APPLICATION='Developer ID Application: Example (TEAMID)'
-export VERSION='0.1.0'
-export BUILD_NUMBER='1'
-bash Scripts/package-app.sh --arch universal --clean
 
-export APP_STORE_CONNECT_API_PRIVATE_KEY="$HOME/private_keys/AuthKey_KEYID.p8"
-export APP_STORE_CONNECT_API_KEY_ID='KEYID'
-export APP_STORE_CONNECT_API_ISSUER_ID='ISSUER-UUID'
-bash Scripts/notarize.sh
-bash Scripts/verify-app.sh
+xcodebuild archive \
+  -project Avail.xcodeproj \
+  -scheme Avail \
+  -configuration Release \
+  -destination 'generic/platform=macOS' \
+  -archivePath "$PWD/dist/Avail.xcarchive" \
+  ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO \
+  MARKETING_VERSION='0.1.0' CURRENT_PROJECT_VERSION='1' \
+  CODE_SIGN_STYLE=Manual CODE_SIGN_IDENTITY="$DEVELOPER_ID_APPLICATION"
+
+ditto dist/Avail.xcarchive/Products/Applications/Avail.app dist/Avail.app
+EXPECTED_ARCHS='arm64 x86_64' bash Scripts/verify-app.sh dist/Avail.app
 ```
 
-As an alternative to API-key environment variables, set `NOTARY_KEYCHAIN_PROFILE` to a profile previously created with `xcrun notarytool store-credentials`. Apple’s [notarizing macOS software](https://developer.apple.com/documentation/security/notarizing-macos-software-before-distribution) documentation explains the trust and ticket model.
+Then configure one supported credential form and submit:
+
+```bash
+export APP_STORE_CONNECT_API_PRIVATE_KEY='/absolute/path/AuthKey_KEYID.p8'
+export APP_STORE_CONNECT_API_KEY_ID='KEYID'
+export APP_STORE_CONNECT_API_ISSUER_ID='ISSUER-UUID'
+bash Scripts/notarize.sh dist/Avail.app
+```
+
+As an alternative, set `NOTARY_KEYCHAIN_PROFILE` to a profile created with `xcrun notarytool store-credentials`.
 
 ## GitHub release secrets
 
 The tag-triggered workflow requires:
 
-- `DEVELOPER_ID_APPLICATION`: exact signing identity name
-- `DEVELOPER_ID_APPLICATION_P12_BASE64`: base64-encoded Developer ID certificate and private key
-- `DEVELOPER_ID_APPLICATION_P12_PASSWORD`: export password for that `.p12`
-- `APP_STORE_CONNECT_API_KEY_ID`: App Store Connect key ID
-- `APP_STORE_CONNECT_API_ISSUER_ID`: App Store Connect issuer UUID
-- `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64`: base64-encoded `.p8` private key
+- `DEVELOPER_ID_APPLICATION`
+- `DEVELOPER_ID_APPLICATION_P12_BASE64`
+- `DEVELOPER_ID_APPLICATION_P12_PASSWORD`
+- `APP_STORE_CONNECT_API_KEY_ID`
+- `APP_STORE_CONNECT_API_ISSUER_ID`
+- `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64`
 
-Before pushing a `vX.Y.Z` tag, update `CFBundleShortVersionString` in `Packaging/Info.plist` to exactly `X.Y.Z`. The workflow imports the signing certificate into a temporary keychain, builds both architectures, creates a hardened and sandboxed universal app, notarizes and staples it, verifies Gatekeeper acceptance, and publishes the app, notices, and SHA-256 checksums.
+Before pushing a `vX.Y.Z` tag, set `MARKETING_VERSION` for the `Avail` target to `X.Y.Z`. The workflow imports the signing identity into a temporary keychain, creates an Xcode archive with both architectures, notarizes and staples the app, verifies it, and publishes the app, notices, and SHA-256 checksums.
 
-Do not put signing or notarization credentials in the repository. Do not publish a tag until the release commit has passed CI and the verification checklist.
+Do not store signing or notarization credentials in the repository.
 
 ## Artifact inspection
 
-The same checks used by CI are available locally:
-
 ```bash
 plutil -p dist/Avail.app/Contents/Info.plist
-codesign -dvvv --entitlements - --xml dist/Avail.app
+codesign -dvvv --entitlements :- dist/Avail.app
 codesign --verify --deep --strict --verbose=2 dist/Avail.app
 xcrun stapler validate dist/Avail.app
 spctl --assess --type execute --verbose=2 dist/Avail.app
 ```
-
-For an ad hoc package, `codesign --verify` should pass while Gatekeeper assessment is expected to reject it. `spctl` acceptance is required only for the Developer ID-signed, notarized release artifact.

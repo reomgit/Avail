@@ -39,12 +39,13 @@ final class PlaybackControlsViewTests: XCTestCase {
             seek: { _ in }
         )
         let bar = FloatingPlaybackBar(
-            book: book,
-            presentation: presentation,
+            context: PersistentPlayerContext(
+                mode: .active(book.id),
+                book: book,
+                presentation: presentation
+            ),
             artworkURL: nil,
             currentWordOffset: 250,
-            totalWordCount: 1_000,
-            narrationRate: 1,
             previousChapter: {},
             skipBackward: {},
             togglePlayback: {},

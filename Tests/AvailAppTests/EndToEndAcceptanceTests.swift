@@ -108,12 +108,11 @@ final class EndToEndAcceptanceTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-        let sourceRoot = repository.appending(path: "Sources", directoryHint: .isDirectory)
-        let files = try FileManager.default.contentsOfDirectory(
-            at: sourceRoot,
-            includingPropertiesForKeys: nil
-        )
-        let swiftFiles = files.flatMap { directory in
+        let sourceRoots = [
+            repository.appending(path: "Avail", directoryHint: .isDirectory),
+            repository.appending(path: "Modules", directoryHint: .isDirectory),
+        ]
+        let swiftFiles = sourceRoots.flatMap { directory in
             guard let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil) else { return [URL]() }
             return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
         }

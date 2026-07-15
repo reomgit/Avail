@@ -4,7 +4,7 @@ Avail is an open-source, local-first EPUB and PDF listener for macOS. It indexes
 
 ## Status
 
-Avail is an MVP for macOS 14 or later with Swift 6.
+Avail is an MVP for macOS 26 or later with Swift 6.
 
 ## MVP Features
 
@@ -12,7 +12,9 @@ Avail is an MVP for macOS 14 or later with Swift 6.
 - Start listening after the first 450 indexed words while the rest of the book prepares.
 - Narrate with voices installed on the Mac; no cloud speech service is required.
 - Resume at the exact spoken range after relaunch or a rebuilt derived index.
-- Read along in the Option B Zen window with synchronized emphasis and a persistent playback inspector.
+- Browse in a native Music-style library with an always-visible Liquid Glass player.
+- Open Apple Books-style details without interrupting the current narration session.
+- Read along in the separate Zen window with synchronized emphasis and a native playback inspector.
 - Control playback from the keyboard, media keys, Control Center, and Now Playing.
 
 ## Principles
@@ -26,22 +28,24 @@ Avail has no production networking or analytics client. During active playback o
 
 ## Build
 
+Open `Avail.xcodeproj` in Xcode 26 or later and use the shared `Avail` scheme. The project is the only build definition; ZIPFoundation and SwiftSoup are managed by Xcode.
+
 ```bash
-swift build
-swift test --parallel
+xcodebuild -resolvePackageDependencies -project Avail.xcodeproj -scheme Avail
+xcodebuild test -project Avail.xcodeproj -scheme Avail -destination 'platform=macOS'
+xcodebuild build -project Avail.xcodeproj -scheme Avail -configuration Release \
+  -destination 'platform=macOS' ARCHS='arm64 x86_64' ONLY_ACTIVE_ARCH=NO
 ```
 
 The app uses only Apple platform frameworks plus [ZIPFoundation](https://github.com/weichsel/ZIPFoundation) and [SwiftSoup](https://github.com/scinfu/SwiftSoup), both under the MIT License.
 
-To assemble the sandboxed macOS app bundle used by releases:
+For a deterministic local Debug build and launch:
 
 ```bash
-bash Scripts/package-app.sh --clean
-bash Scripts/verify-app.sh
-open dist/Avail.app
+bash script/build_and_run.sh run
 ```
 
-Contributor packages are ad hoc signed. Public releases are universal, Developer ID signed, hardened, notarized, and stapled through the documented GitHub Actions workflow. See [Releasing Avail](docs/releasing.md) for credentials, commands, and artifact validation.
+Create a distributable bundle with Xcode’s Product > Archive command or `xcodebuild archive`. Public releases are universal, Developer ID signed, hardened, notarized, and stapled through the documented GitHub Actions workflow. See [Releasing Avail](docs/releasing.md) for credentials, commands, and artifact validation.
 
 ## MVP Limits
 

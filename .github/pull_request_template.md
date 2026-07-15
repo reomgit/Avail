@@ -4,10 +4,10 @@ Describe the user-visible outcome and why this is the smallest appropriate chang
 
 ## Verification
 
-- [ ] `swift format lint --strict --recursive --parallel --configuration .swift-format Sources Tests`
-- [ ] `swift test --parallel`
-- [ ] `swift build -c release`
-- [ ] `bash Scripts/package-app.sh --clean && bash Scripts/verify-app.sh` (when packaging, entitlements, resources, or app startup changes)
+- [ ] `swift format lint --strict --recursive --parallel --configuration .swift-format Avail Modules Tests`
+- [ ] `xcodebuild test -project Avail.xcodeproj -scheme Avail -destination 'platform=macOS'`
+- [ ] Universal Release build through the shared `Avail` scheme
+- [ ] `bash Scripts/verify-app.sh <path-to-Avail.app>` (when packaging, entitlements, resources, or app startup changes)
 
 ## Product and privacy
 
@@ -22,4 +22,4 @@ For UI changes, include the Context7-backed Apple documentation or Human Interfa
 - [ ] Keyboard access and VoiceOver labels
 - [ ] Light and dark appearance
 - [ ] Increase Contrast, Reduce Transparency, and Reduce Motion where applicable
-- [ ] The persistent Option B Zen listening layout at compact and expanded window sizes
+- [ ] Full and compact persistent-player layouts plus the separate Zen inspector
