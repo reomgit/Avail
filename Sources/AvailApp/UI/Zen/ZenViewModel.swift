@@ -48,7 +48,10 @@ final class ZenViewModel {
     var isConnectedToActivePlayback: Bool { playback.currentBookID == bookID }
     var currentSectionID: UUID? { playback.currentChunk?.sectionID }
     var currentChapterTitle: String? {
-        sections.first(where: { $0.id == currentSectionID })?.title
+        if isConnectedToActivePlayback, let currentChapterTitle = playback.currentChapterTitle {
+            return currentChapterTitle
+        }
+        return sections.first(where: { $0.id == currentSectionID })?.title
     }
     var availableVoices: [NarrationVoice] {
         guard let languageCode = book?.languageCode, !languageCode.isEmpty else {

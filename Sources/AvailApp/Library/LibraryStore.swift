@@ -56,6 +56,14 @@ final class LibraryStore {
         try books().first(where: { $0.id == id })
     }
 
+    func artworkURL(for record: LibraryBookRecord) -> URL? {
+        artworkStore.fileURL(for: record.coverRelativePath)
+    }
+
+    func artworkData(for record: LibraryBookRecord) -> Data? {
+        artworkStore.data(for: record.coverRelativePath)
+    }
+
     func accessBookFile(bookID: UUID) throws -> LibraryBookAccess {
         guard let record = try book(id: bookID) else { throw LibraryError.missingRecord }
         let lease = try locationStore.beginAccess()

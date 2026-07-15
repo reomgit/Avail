@@ -32,6 +32,8 @@ final class PlaybackCoordinator {
     private(set) var state: PlaybackState = .stopped
     private(set) var currentBookID: UUID?
     private(set) var currentChunk: SpeechChunk?
+    private(set) var currentChapterTitle: String?
+    private(set) var currentChapterNumber: Int?
     private(set) var highlightedChunkID: UUID?
     private(set) var highlightRange: NSRange?
     var followMode = true
@@ -81,6 +83,8 @@ final class PlaybackCoordinator {
         do {
             guard let record = try libraryStore.book(id: bookID) else { throw LibraryError.missingRecord }
             currentBookID = bookID
+            currentChapterTitle = nil
+            currentChapterNumber = nil
             highlightedChunkID = nil
             highlightRange = nil
             try await restore(record: record)
@@ -396,14 +400,16 @@ final class PlaybackCoordinator {
         else { return }
         let sections = (try? await indexStore.sections(bookID: bookID).sorted { $0.ordinal < $1.ordinal }) ?? []
         let sectionIndex = sections.firstIndex(where: { $0.id == currentChunk.sectionID })
+        currentChapterTitle = sectionIndex.flatMap { sections[$0].title }
+        currentChapterNumber = sectionIndex.map { $0 + 1 }
         let wordsPerSecond = 2.5 * max(0.5, min(record.narrationRate, 2))
         nowPlaying.update(
             NowPlayingSnapshot(
                 title: record.title,
                 artist: record.author,
-                chapterTitle: sectionIndex.map { sections[$0].title } ?? nil,
-                chapterNumber: sectionIndex.map { $0 + 1 },
-                artworkData: nil,
+                chapterTitle: currentChapterTitle,
+                chapterNumber: currentChapterNumber,
+                artworkData: libraryStore.artworkData(for: record),
                 estimatedDuration: Double(record.indexedWordCount) / wordsPerSecond,
                 elapsedTime: Double(currentNormalizedWordOffset) / wordsPerSecond,
                 playbackRate: state == .playing ? record.narrationRate : 0

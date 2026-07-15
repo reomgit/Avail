@@ -63,6 +63,15 @@ final class ZenViewModelTests: XCTestCase {
         XCTAssertEqual(reopened.chunks.map(\.id), fixture.chunks.map(\.id))
     }
 
+    func testActivePlaybackSharesChapterPresentationBeforeZenContentLoads() async throws {
+        fixture = try await ZenFixture(sandbox: sandbox)
+        let model = fixture.makeModel()
+
+        await fixture.playback.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(model.currentChapterTitle, "Beginning")
+    }
+
     func testVoiceAndRatePersistPerBook() async throws {
         fixture = try await ZenFixture(sandbox: sandbox)
         let model = fixture.makeModel()

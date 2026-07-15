@@ -114,6 +114,35 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.engine.spoken.last?.chunk.id, fixture.chunks[1].id)
     }
 
+    func testNowPlayingPresentationTracksChapterAndArtwork() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.coordinator.currentChapterTitle, "Chapter 1")
+        XCTAssertEqual(fixture.coordinator.currentChapterNumber, 1)
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.chapterTitle, "Chapter 1")
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.artworkData, fixture.coverData)
+
+        await fixture.coordinator.nextChapter()
+
+        XCTAssertEqual(fixture.coordinator.currentChapterTitle, "Chapter 2")
+        XCTAssertEqual(fixture.coordinator.currentChapterNumber, 2)
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.chapterTitle, "Chapter 2")
+    }
+
+    func testCorruptArtworkFallsBackWithoutInterruptingPlayback() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        let artworkURL = try XCTUnwrap(fixture.libraryStore.artworkURL(for: record))
+        try Data("corrupt".utf8).write(to: artworkURL, options: .atomic)
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.coordinator.state, .playing)
+        XCTAssertNil(fixture.nowPlaying.snapshots.last?.artworkData)
+    }
+
     func testFrontierBuffersPrioritizesIndexingAndResumesAfterCommittedUpdate() async throws {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20], isIndexComplete: false)
         await fixture.coordinator.play(bookID: fixture.bookID)
@@ -159,6 +188,7 @@ final class PlaybackCoordinatorTests: XCTestCase {
 @MainActor
 private final class PlaybackFixture {
     let sandbox: URL
+    let artworkStore: ArtworkStore
     let libraryStore: LibraryStore
     let indexStore: ReadingIndexStore
     let engine = FakeNarrationEngine()
@@ -168,6 +198,9 @@ private final class PlaybackFixture {
     private(set) var bookID: UUID
     private(set) var chunks: [SpeechChunk]
     private var nextBatchOrdinal = 1
+    let coverData = Data(
+        base64Encoded: "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII="
+    )!
 
     init(
         sandbox: URL,
@@ -186,12 +219,13 @@ private final class PlaybackFixture {
             for: LibraryBookRecord.self,
             configurations: ModelConfiguration(isStoredInMemoryOnly: true)
         )
+        artworkStore = ArtworkStore(
+            rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
+        )
         libraryStore = LibraryStore(
             modelContainer: container,
             locationStore: locationStore,
-            artworkStore: ArtworkStore(
-                rootURL: sandbox.appending(path: "Artwork", directoryHint: .isDirectory)
-            )
+            artworkStore: artworkStore
         )
         indexStore = ReadingIndexStore(rootURL: sandbox.appending(path: "Indexes", directoryHint: .isDirectory))
         let created = try await Self.createBook(
@@ -205,6 +239,10 @@ private final class PlaybackFixture {
         )
         bookID = created.bookID
         chunks = created.chunks
+        try await libraryStore.applyMetadata(
+            BookMetadata(title: "First", authors: ["Fixture Author"], coverData: coverData),
+            bookID: bookID
+        )
         coordinator = PlaybackCoordinator(
             engine: engine,
             indexStore: indexStore,
