@@ -27,7 +27,7 @@ struct LibraryRootView: View {
             )
             .navigationSplitViewColumnWidth(min: 190, ideal: 220, max: 280)
         } detail: {
-            ZStack(alignment: .bottom) {
+            LibraryDetailLayout {
                 LibraryGridView(
                     books: displayedBooks,
                     selection: $model.selectedBookID,
@@ -37,7 +37,7 @@ struct LibraryRootView: View {
                     bottomContentInset: playerContext == nil ? 0 : 118,
                     artworkURL: artworkURL
                 )
-
+            } player: {
                 if let playerContext,
                     let playback = environment.playbackCoordinator
                 {
