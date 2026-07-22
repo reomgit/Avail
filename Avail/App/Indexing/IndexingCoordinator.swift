@@ -1,0 +1,183 @@
+import AvailCore
+import Foundation
+import Observation
+
+struct IndexingUpdate: Sendable {
+    let bookID: UUID
+    let progress: IndexingProgress
+}
+
+@MainActor
+protocol IndexingPrioritizing: AnyObject {
+    var updates: AsyncStream<IndexingUpdate> { get }
+    func prioritize(bookID: UUID, after locator: SourceLocator?)
+}
+
+@MainActor
+@Observable
+final class IndexingCoordinator: IndexingPrioritizing {
+    private let libraryStore: LibraryStore
+    private let indexStore: ReadingIndexStore
+    private let indexerFactory: any IndexerProviding
+    private let updateStream: AsyncStream<IndexingUpdate>
+    private let updateContinuation: AsyncStream<IndexingUpdate>.Continuation
+    private var tasks: [UUID: Task<Void, Never>] = [:]
+    private(set) var progressByBookID: [UUID: IndexingProgress] = [:]
+
+    init(
+        libraryStore: LibraryStore,
+        indexStore: ReadingIndexStore,
+        indexerFactory: any IndexerProviding = IndexerFactory()
+    ) {
+        self.libraryStore = libraryStore
+        self.indexStore = indexStore
+        self.indexerFactory = indexerFactory
+        (updateStream, updateContinuation) = AsyncStream.makeStream(of: IndexingUpdate.self)
+    }
+
+    var updates: AsyncStream<IndexingUpdate> { updateStream }
+
+    func progress(for bookID: UUID) -> IndexingProgress? {
+        progressByBookID[bookID]
+    }
+
+    func start(bookID: UUID) {
+        tasks[bookID]?.cancel()
+        do {
+            guard let record = try libraryStore.book(id: bookID) else { throw LibraryError.missingRecord }
+            let access = try libraryStore.accessBookFile(bookID: bookID)
+            let indexer = indexerFactory.indexer(for: record.format)
+            setProgress(IndexingProgress(phase: .readingMetadata), bookID: bookID)
+            tasks[bookID] = Task { [weak self] in
+                guard let self else { return }
+                await self.run(bookID: bookID, access: access, indexer: indexer)
+            }
+        } catch {
+            recordFailure(error, bookID: bookID)
+        }
+    }
+
+    func startIfNeeded(bookID: UUID) {
+        guard tasks[bookID] == nil else { return }
+        start(bookID: bookID)
+    }
+
+    func cancel(bookID: UUID) {
+        tasks.removeValue(forKey: bookID)?.cancel()
+    }
+
+    func retry(bookID: UUID) {
+        start(bookID: bookID)
+    }
+
+    func prioritize(bookID: UUID, after locator: SourceLocator?) {
+        let lowerPriorityBookIDs = tasks.keys.filter { $0 != bookID }
+        for otherBookID in lowerPriorityBookIDs {
+            tasks.removeValue(forKey: otherBookID)?.cancel()
+        }
+        if tasks[bookID] == nil {
+            start(bookID: bookID)
+        }
+        _ = locator
+    }
+
+    func waitUntilFinished(bookID: UUID) async {
+        await tasks[bookID]?.value
+    }
+
+    private func run(
+        bookID: UUID,
+        access: LibraryBookAccess,
+        indexer: any DocumentIndexer
+    ) async {
+        do {
+            let recovered = try await indexStore.recover(bookID: bookID)
+            try libraryStore.applyIndexManifest(recovered, bookID: bookID)
+            setProgress(
+                progress(
+                    from: recovered,
+                    completedSourceUnits: 0,
+                    phase: recovered.indexedWordCount >= 450 ? .playable : .indexing
+                ), bookID: bookID)
+
+            var completedSourceUnits = 0
+            let stream = indexer.events(
+                for: access.url,
+                bookID: bookID,
+                resumeAfter: recovered.playableFrontier
+            )
+            for try await event in stream {
+                try Task.checkCancellation()
+                switch event {
+                case let .metadata(metadata):
+                    try await libraryStore.applyMetadata(metadata, bookID: bookID)
+                case let .batch(batch):
+                    try await indexStore.commit(batch, bookID: bookID)
+                    let committed = try await indexStore.manifest(bookID: bookID)
+                    if batch.resumeLocator.completesSourceUnit { completedSourceUnits += 1 }
+                    try libraryStore.applyIndexManifest(committed, bookID: bookID)
+                    setProgress(
+                        progress(
+                            from: committed,
+                            completedSourceUnits: completedSourceUnits,
+                            phase: committed.indexedWordCount >= 450 ? .playable : .indexing
+                        ), bookID: bookID)
+                case let .completed(totalWords, sectionCount):
+                    try await indexStore.markComplete(bookID: bookID)
+                    let completed = try await indexStore.manifest(bookID: bookID)
+                    try libraryStore.applyIndexManifest(completed, bookID: bookID)
+                    setProgress(
+                        IndexingProgress(
+                            phase: .complete,
+                            completedSourceUnits: sectionCount,
+                            totalSourceUnits: sectionCount,
+                            indexedWordCount: max(totalWords, completed.indexedWordCount),
+                            playableFrontier: completed.playableFrontier
+                        ), bookID: bookID)
+                }
+            }
+        } catch is CancellationError {
+            return
+        } catch {
+            if !Task.isCancelled { recordFailure(error, bookID: bookID) }
+        }
+    }
+
+    private func progress(
+        from manifest: IndexManifest,
+        completedSourceUnits: Int,
+        phase: IndexingPhase
+    ) -> IndexingProgress {
+        IndexingProgress(
+            phase: phase,
+            completedSourceUnits: completedSourceUnits,
+            indexedWordCount: manifest.indexedWordCount,
+            playableFrontier: manifest.playableFrontier
+        )
+    }
+
+    private func recordFailure(_ error: Error, bookID: UUID) {
+        let description = (error as? LocalizedError)?.errorDescription ?? String(describing: error)
+        try? libraryStore.markIndexingFailure(bookID: bookID, description: description)
+        var current = progressByBookID[bookID] ?? IndexingProgress()
+        current.phase = .failed
+        current.errorDescription = description
+        setProgress(current, bookID: bookID)
+    }
+
+    private func setProgress(_ progress: IndexingProgress, bookID: UUID) {
+        progressByBookID[bookID] = progress
+        updateContinuation.yield(IndexingUpdate(bookID: bookID, progress: progress))
+    }
+}
+
+private extension SourceLocator {
+    var completesSourceUnit: Bool {
+        switch self {
+        case .epub, .pdf:
+            true
+        case .epubProgress, .pdfProgress:
+            false
+        }
+    }
+}
