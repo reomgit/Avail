@@ -1,0 +1,492 @@
+{
+  "Avail/App/AppEnvironment.swift": {
+    "mtime": 1784697537.9148824,
+    "ast_hash": "3cbbb15381b396733df5e2cdb1282147",
+    "semantic_hash": "3cbbb15381b396733df5e2cdb1282147"
+  },
+  "Avail/App/AvailApp.swift": {
+    "mtime": 1784697537.9152608,
+    "ast_hash": "83d280aca0109b18692752827b291c3c",
+    "semantic_hash": "83d280aca0109b18692752827b291c3c"
+  },
+  "Avail/App/Indexing/IndexerFactory.swift": {
+    "mtime": 1784697537.9153867,
+    "ast_hash": "feb261e13f2e37b79e17778b3d1c2648",
+    "semantic_hash": "feb261e13f2e37b79e17778b3d1c2648"
+  },
+  "Avail/App/Indexing/IndexingCoordinator.swift": {
+    "mtime": 1784697537.9154937,
+    "ast_hash": "ccaf78791081f36fbf993bb9f5fd6f4d",
+    "semantic_hash": "ccaf78791081f36fbf993bb9f5fd6f4d"
+  },
+  "Avail/App/Library/ArtworkStore.swift": {
+    "mtime": 1784697537.9156368,
+    "ast_hash": "2bacb072e80f36c01f5b64803d814e68",
+    "semantic_hash": "2bacb072e80f36c01f5b64803d814e68"
+  },
+  "Avail/App/Library/LibraryBookRecord.swift": {
+    "mtime": 1784697537.9157248,
+    "ast_hash": "de3fda5c7477ca65058eae29c9910a99",
+    "semantic_hash": "de3fda5c7477ca65058eae29c9910a99"
+  },
+  "Avail/App/Library/LibraryError.swift": {
+    "mtime": 1784697537.915807,
+    "ast_hash": "8ccd79bcd5260d9d5b8d611d86bf8c2a",
+    "semantic_hash": "8ccd79bcd5260d9d5b8d611d86bf8c2a"
+  },
+  "Avail/App/Library/LibraryFileService.swift": {
+    "mtime": 1784697537.915915,
+    "ast_hash": "d5f75483dacaf0147f42f206ecc344b5",
+    "semantic_hash": "d5f75483dacaf0147f42f206ecc344b5"
+  },
+  "Avail/App/Library/LibraryLocationStore.swift": {
+    "mtime": 1784697537.9160092,
+    "ast_hash": "cbe4d0f1477a623ac935b032c16ac180",
+    "semantic_hash": "cbe4d0f1477a623ac935b032c16ac180"
+  },
+  "Avail/App/Library/LibraryStore.swift": {
+    "mtime": 1784697537.9161215,
+    "ast_hash": "91a1b4d9f0b2f4bb0dffb36345a3de44",
+    "semantic_hash": "91a1b4d9f0b2f4bb0dffb36345a3de44"
+  },
+  "Avail/App/Playback/NowPlayingController.swift": {
+    "mtime": 1784697537.9162621,
+    "ast_hash": "0837c8ecb3428c9f35903f40571c1d87",
+    "semantic_hash": "0837c8ecb3428c9f35903f40571c1d87"
+  },
+  "Avail/App/Playback/PlaybackCoordinator.swift": {
+    "mtime": 1784697537.9165578,
+    "ast_hash": "d8e4822c6b0b1c65532617f9d30724d0",
+    "semantic_hash": "d8e4822c6b0b1c65532617f9d30724d0"
+  },
+  "Avail/App/Playback/PlaybackPersistence.swift": {
+    "mtime": 1784697537.9166465,
+    "ast_hash": "f5a299833fbb582cf7b96a202b0d12bb",
+    "semantic_hash": "f5a299833fbb582cf7b96a202b0d12bb"
+  },
+  "Avail/App/UI/Components/BookArtworkView.swift": {
+    "mtime": 1784697537.9168217,
+    "ast_hash": "9eaefe347e61e9e8dcbd3d6eb9c8ea87",
+    "semantic_hash": "9eaefe347e61e9e8dcbd3d6eb9c8ea87"
+  },
+  "Avail/App/UI/Components/BookStateLabel.swift": {
+    "mtime": 1784697537.9168952,
+    "ast_hash": "443f8c77d3a319bd895d41f38f5fc87a",
+    "semantic_hash": "443f8c77d3a319bd895d41f38f5fc87a"
+  },
+  "Avail/App/UI/Components/RecoveryView.swift": {
+    "mtime": 1784697537.916978,
+    "ast_hash": "cf20c974e319e0c3787e495ee679db5c",
+    "semantic_hash": "cf20c974e319e0c3787e495ee679db5c"
+  },
+  "Avail/App/UI/Library/BookCardView.swift": {
+    "mtime": 1784697537.9172459,
+    "ast_hash": "f1c2dcfdbec62b22b045ae8d5545da38",
+    "semantic_hash": "f1c2dcfdbec62b22b045ae8d5545da38"
+  },
+  "Avail/App/UI/Library/BookDetailView.swift": {
+    "mtime": 1784697537.917553,
+    "ast_hash": "242fb4cee0b77c2d1835c78814124b79",
+    "semantic_hash": "242fb4cee0b77c2d1835c78814124b79"
+  },
+  "Avail/App/UI/Library/BookDetailViewModel.swift": {
+    "mtime": 1784697537.9177768,
+    "ast_hash": "f3ea6d9007df58cfe833e41a3bd12e35",
+    "semantic_hash": "f3ea6d9007df58cfe833e41a3bd12e35"
+  },
+  "Avail/App/UI/Library/BookImportContentTypes.swift": {
+    "mtime": 1784697537.917869,
+    "ast_hash": "062ede6e7aeb177c02e537ee983e53c7",
+    "semantic_hash": "062ede6e7aeb177c02e537ee983e53c7"
+  },
+  "Avail/App/UI/Library/LibraryCommands.swift": {
+    "mtime": 1784697537.9179623,
+    "ast_hash": "d102043cace7d92023b00f25b53ff650",
+    "semantic_hash": "d102043cace7d92023b00f25b53ff650"
+  },
+  "Avail/App/UI/Library/LibraryGridView.swift": {
+    "mtime": 1784697537.9181993,
+    "ast_hash": "df82b4718c3c9626b6459b221c834365",
+    "semantic_hash": "df82b4718c3c9626b6459b221c834365"
+  },
+  "Avail/App/UI/Library/LibraryLocationView.swift": {
+    "mtime": 1784697537.9182913,
+    "ast_hash": "31b95611cd757280d18d582734a878a2",
+    "semantic_hash": "31b95611cd757280d18d582734a878a2"
+  },
+  "Avail/App/UI/Library/LibraryRootView.swift": {
+    "mtime": 1784697537.9185584,
+    "ast_hash": "d97d0f405c4940dd3b91a1d0805acc75",
+    "semantic_hash": "d97d0f405c4940dd3b91a1d0805acc75"
+  },
+  "Avail/App/UI/Library/LibrarySidebar.swift": {
+    "mtime": 1784697537.91867,
+    "ast_hash": "75661ac7f406edc06c596c2d2509bb72",
+    "semantic_hash": "75661ac7f406edc06c596c2d2509bb72"
+  },
+  "Avail/App/UI/Library/LibraryToolbar.swift": {
+    "mtime": 1784697537.9189887,
+    "ast_hash": "adf9fe8b7b62019c885ae0cd67d05dd5",
+    "semantic_hash": "adf9fe8b7b62019c885ae0cd67d05dd5"
+  },
+  "Avail/App/UI/Library/LibraryViewModel.swift": {
+    "mtime": 1784697537.919124,
+    "ast_hash": "215a84b5a71d54eb13239e6e34985d27",
+    "semantic_hash": "215a84b5a71d54eb13239e6e34985d27"
+  },
+  "Avail/App/UI/Playback/FloatingPlaybackBar.swift": {
+    "mtime": 1784697537.9193237,
+    "ast_hash": "3d25775a840518caae2870915731e3f8",
+    "semantic_hash": "3d25775a840518caae2870915731e3f8"
+  },
+  "Avail/App/UI/Playback/PlaybackBarPresentation.swift": {
+    "mtime": 1784697537.9196892,
+    "ast_hash": "b46866bd4d06844de932b7b5a29817dd",
+    "semantic_hash": "b46866bd4d06844de932b7b5a29817dd"
+  },
+  "Avail/App/UI/Playback/PlaybackProgressControl.swift": {
+    "mtime": 1784697537.9197812,
+    "ast_hash": "932511a208bb03f2cdfba2322e75558a",
+    "semantic_hash": "932511a208bb03f2cdfba2322e75558a"
+  },
+  "Avail/App/UI/Playback/PlaybackTransportControls.swift": {
+    "mtime": 1784697537.9199986,
+    "ast_hash": "c1de8b8d8d10397d4e148e0bdf6a0c99",
+    "semantic_hash": "c1de8b8d8d10397d4e148e0bdf6a0c99"
+  },
+  "Avail/App/UI/RootView.swift": {
+    "mtime": 1784697537.920092,
+    "ast_hash": "af7a08541fad88101fee7354c0b290d2",
+    "semantic_hash": "af7a08541fad88101fee7354c0b290d2"
+  },
+  "Avail/App/UI/Settings/LibrarySettingsView.swift": {
+    "mtime": 1784697537.9202409,
+    "ast_hash": "3fd2c839bd7b25192f2b94c926a04675",
+    "semantic_hash": "3fd2c839bd7b25192f2b94c926a04675"
+  },
+  "Avail/App/UI/Settings/LicensesView.swift": {
+    "mtime": 1784697537.9203281,
+    "ast_hash": "8077c4d84c4b0c16b2d7ac6e4876b6ed",
+    "semantic_hash": "8077c4d84c4b0c16b2d7ac6e4876b6ed"
+  },
+  "Avail/App/UI/Settings/PrivacyView.swift": {
+    "mtime": 1784697537.9204144,
+    "ast_hash": "3c7318c6b866f1b6c3d7f9eaa86ee215",
+    "semantic_hash": "3c7318c6b866f1b6c3d7f9eaa86ee215"
+  },
+  "Avail/App/UI/Settings/SettingsRootView.swift": {
+    "mtime": 1784697537.9204924,
+    "ast_hash": "694c838ff6dd4df05e91c2da1267565c",
+    "semantic_hash": "694c838ff6dd4df05e91c2da1267565c"
+  },
+  "Avail/App/UI/Zen/ChapterMenu.swift": {
+    "mtime": 1784697537.9206173,
+    "ast_hash": "4eb2252027a14a110843ef0456cf3216",
+    "semantic_hash": "4eb2252027a14a110843ef0456cf3216"
+  },
+  "Avail/App/UI/Zen/PlaybackInspectorView.swift": {
+    "mtime": 1784697537.9208512,
+    "ast_hash": "42e3364d053ccf23891094a2835ad38d",
+    "semantic_hash": "42e3364d053ccf23891094a2835ad38d"
+  },
+  "Avail/App/UI/Zen/ReadingContentView.swift": {
+    "mtime": 1784697537.9213023,
+    "ast_hash": "98ad66ee2735391f1f80fd7f7710e593",
+    "semantic_hash": "98ad66ee2735391f1f80fd7f7710e593"
+  },
+  "Avail/App/UI/Zen/VoiceAndRateControls.swift": {
+    "mtime": 1784697537.9213848,
+    "ast_hash": "e06d912ea1ca75bc00df3f322938e064",
+    "semantic_hash": "e06d912ea1ca75bc00df3f322938e064"
+  },
+  "Avail/App/UI/Zen/ZenReaderView.swift": {
+    "mtime": 1784697537.921529,
+    "ast_hash": "4e0a44525c8bd569ee5a728081d9b065",
+    "semantic_hash": "4e0a44525c8bd569ee5a728081d9b065"
+  },
+  "Avail/App/UI/Zen/ZenViewModel.swift": {
+    "mtime": 1784697537.9217923,
+    "ast_hash": "1091f9a53015b4aead9250899b1d5b15",
+    "semantic_hash": "1091f9a53015b4aead9250899b1d5b15"
+  },
+  "Avail/Assets.xcassets/AccentColor.colorset/Contents.json": {
+    "mtime": 1784697537.9221354,
+    "ast_hash": "55019f7265dde0a78318b0807f98e847",
+    "semantic_hash": "55019f7265dde0a78318b0807f98e847"
+  },
+  "Avail/Assets.xcassets/AppIcon.appiconset/Contents.json": {
+    "mtime": 1784697537.922457,
+    "ast_hash": "312293803cc066cebe794885fe1ddcfe",
+    "semantic_hash": "312293803cc066cebe794885fe1ddcfe"
+  },
+  "Avail/Assets.xcassets/Contents.json": {
+    "mtime": 1784697537.922545,
+    "ast_hash": "9deb2ada1cc834bbebf8bbad9c8978a1",
+    "semantic_hash": "9deb2ada1cc834bbebf8bbad9c8978a1"
+  },
+  "Modules/AvailCore/AtomicFileWriter.swift": {
+    "mtime": 1784697537.9265747,
+    "ast_hash": "dcee325825b4db09ffa31cddb78a4d8d",
+    "semantic_hash": "dcee325825b4db09ffa31cddb78a4d8d"
+  },
+  "Modules/AvailCore/DocumentIndexing.swift": {
+    "mtime": 1784697537.9266427,
+    "ast_hash": "9e2f5317b9a89118be5dd12b41ce0bc8",
+    "semantic_hash": "9e2f5317b9a89118be5dd12b41ce0bc8"
+  },
+  "Modules/AvailCore/ReadingIndexStore.swift": {
+    "mtime": 1784697537.9267273,
+    "ast_hash": "81bde03d13156611ccc5bc421ac1b520",
+    "semantic_hash": "81bde03d13156611ccc5bc421ac1b520"
+  },
+  "Modules/AvailCore/ReadingModels.swift": {
+    "mtime": 1784697537.9268298,
+    "ast_hash": "eb32279736890bf8918528eee78cc982",
+    "semantic_hash": "eb32279736890bf8918528eee78cc982"
+  },
+  "Modules/AvailCore/TextChunker.swift": {
+    "mtime": 1784697537.9269197,
+    "ast_hash": "f6706e483cb29527c4a9d595fa89b555",
+    "semantic_hash": "f6706e483cb29527c4a9d595fa89b555"
+  },
+  "Modules/AvailEPUB/EPUBContentParser.swift": {
+    "mtime": 1784697537.9270396,
+    "ast_hash": "a0f7561f24754c81dd5573655c9b3413",
+    "semantic_hash": "a0f7561f24754c81dd5573655c9b3413"
+  },
+  "Modules/AvailEPUB/EPUBError.swift": {
+    "mtime": 1784697537.9271228,
+    "ast_hash": "4e4d5106220c9bdad5b69350e9e1d8cd",
+    "semantic_hash": "4e4d5106220c9bdad5b69350e9e1d8cd"
+  },
+  "Modules/AvailEPUB/EPUBIndexer.swift": {
+    "mtime": 1784697537.9273024,
+    "ast_hash": "3ff54592739973e757a8fe5b9a148ec8",
+    "semantic_hash": "3ff54592739973e757a8fe5b9a148ec8"
+  },
+  "Modules/AvailEPUB/EPUBPackageParser.swift": {
+    "mtime": 1784697537.9274173,
+    "ast_hash": "2dc01ed8f7993a0b18cc626c497fccf2",
+    "semantic_hash": "2dc01ed8f7993a0b18cc626c497fccf2"
+  },
+  "Modules/AvailPDF/PDFIndexer.swift": {
+    "mtime": 1784697537.9275944,
+    "ast_hash": "adb708ea92021bc29be616e013e3d47e",
+    "semantic_hash": "adb708ea92021bc29be616e013e3d47e"
+  },
+  "Modules/AvailPDF/PDFIndexingError.swift": {
+    "mtime": 1784697537.9276783,
+    "ast_hash": "cf21d65d9f15a709b25163bd9da46d91",
+    "semantic_hash": "cf21d65d9f15a709b25163bd9da46d91"
+  },
+  "Modules/AvailPDF/PDFMetadataReader.swift": {
+    "mtime": 1784697537.9277554,
+    "ast_hash": "4a1e612b7a8505dd559647f92cb2891f",
+    "semantic_hash": "4a1e612b7a8505dd559647f92cb2891f"
+  },
+  "Modules/AvailPlayback/NarrationEngine.swift": {
+    "mtime": 1784697537.927878,
+    "ast_hash": "4d14b04d3d465ce442d3e0e2437b0803",
+    "semantic_hash": "4d14b04d3d465ce442d3e0e2437b0803"
+  },
+  "Modules/AvailPlayback/NarrationModels.swift": {
+    "mtime": 1784697537.9279654,
+    "ast_hash": "60ca186938af057ca1a169aa486217dd",
+    "semantic_hash": "60ca186938af057ca1a169aa486217dd"
+  },
+  "Modules/AvailPlayback/SystemNarrationEngine.swift": {
+    "mtime": 1784697537.9280689,
+    "ast_hash": "e43fe5b425877e0f2f8a387e71d9e3d3",
+    "semantic_hash": "e43fe5b425877e0f2f8a387e71d9e3d3"
+  },
+  "Scripts/notarize.sh": {
+    "mtime": 1784697537.9285514,
+    "ast_hash": "95b5b58a4815bf0c697bbe32e970032f",
+    "semantic_hash": "95b5b58a4815bf0c697bbe32e970032f"
+  },
+  "Scripts/verify-app.sh": {
+    "mtime": 1784697537.9287164,
+    "ast_hash": "de1979624dff4adee44a6736fa0ac484",
+    "semantic_hash": "de1979624dff4adee44a6736fa0ac484"
+  },
+  "Tests/AvailAppTests/AdaptiveChromeTests.swift": {
+    "mtime": 1784697537.9289937,
+    "ast_hash": "441714d7fbb6b4cc6b99bccb2398369c",
+    "semantic_hash": "441714d7fbb6b4cc6b99bccb2398369c"
+  },
+  "Tests/AvailAppTests/AppEnvironmentTests.swift": {
+    "mtime": 1784697537.9291704,
+    "ast_hash": "2995fa2328ae7dfff4e2cceb7828a8d2",
+    "semantic_hash": "2995fa2328ae7dfff4e2cceb7828a8d2"
+  },
+  "Tests/AvailAppTests/ArtworkStoreTests.swift": {
+    "mtime": 1784697537.9292626,
+    "ast_hash": "0e13d73d8c8e46fa4a664cfdb7386022",
+    "semantic_hash": "0e13d73d8c8e46fa4a664cfdb7386022"
+  },
+  "Tests/AvailAppTests/BookArtworkViewTests.swift": {
+    "mtime": 1784697537.9294124,
+    "ast_hash": "83b93850520166a8a4c353ac705bd84a",
+    "semantic_hash": "83b93850520166a8a4c353ac705bd84a"
+  },
+  "Tests/AvailAppTests/BookImportContentTypesTests.swift": {
+    "mtime": 1784697537.9295,
+    "ast_hash": "351514fa845c1118dd98e70a7c20bda9",
+    "semantic_hash": "351514fa845c1118dd98e70a7c20bda9"
+  },
+  "Tests/AvailAppTests/EndToEndAcceptanceTests.swift": {
+    "mtime": 1784697537.9296749,
+    "ast_hash": "5f7475abbb004cb3a28ce0c04c480747",
+    "semantic_hash": "5f7475abbb004cb3a28ce0c04c480747"
+  },
+  "Tests/AvailAppTests/IndexingCoordinatorTests.swift": {
+    "mtime": 1784697537.9297924,
+    "ast_hash": "fc0521082208acfb631cfd1b1bd469af",
+    "semantic_hash": "fc0521082208acfb631cfd1b1bd469af"
+  },
+  "Tests/AvailAppTests/LibraryDetailLayoutTests.swift": {
+    "mtime": 1784697537.9301329,
+    "ast_hash": "5c2055668fc1641906e5d5ad44be8b81",
+    "semantic_hash": "5c2055668fc1641906e5d5ad44be8b81"
+  },
+  "Tests/AvailAppTests/LibraryStoreTests.swift": {
+    "mtime": 1784697537.9304123,
+    "ast_hash": "773e68717337fc90ba308a81f67d241e",
+    "semantic_hash": "773e68717337fc90ba308a81f67d241e"
+  },
+  "Tests/AvailAppTests/LibraryViewModelTests.swift": {
+    "mtime": 1784697537.930598,
+    "ast_hash": "a2d78a98c5063a6fd2f6ea55d701093c",
+    "semantic_hash": "a2d78a98c5063a6fd2f6ea55d701093c"
+  },
+  "Tests/AvailAppTests/NowPlayingControllerTests.swift": {
+    "mtime": 1784697537.930691,
+    "ast_hash": "03e639cdfd84e299ab00ca749b69c6a6",
+    "semantic_hash": "03e639cdfd84e299ab00ca749b69c6a6"
+  },
+  "Tests/AvailAppTests/PlaybackBarPresentationTests.swift": {
+    "mtime": 1784697537.9309459,
+    "ast_hash": "68947bba3457f6d9569101b9d06c3d7f",
+    "semantic_hash": "68947bba3457f6d9569101b9d06c3d7f"
+  },
+  "Tests/AvailAppTests/PlaybackControlsViewTests.swift": {
+    "mtime": 1784697537.9311616,
+    "ast_hash": "f5dda3f8a09cace4e2c3c79e44400c88",
+    "semantic_hash": "f5dda3f8a09cace4e2c3c79e44400c88"
+  },
+  "Tests/AvailAppTests/PlaybackCoordinatorTests.swift": {
+    "mtime": 1784697537.9315581,
+    "ast_hash": "885a71accf0277d07ba8cffed2e075bc",
+    "semantic_hash": "885a71accf0277d07ba8cffed2e075bc"
+  },
+  "Tests/AvailAppTests/PlaybackProgressModelTests.swift": {
+    "mtime": 1784697537.931661,
+    "ast_hash": "e5bfa9b85a0614b832bd3046c46845b2",
+    "semantic_hash": "e5bfa9b85a0614b832bd3046c46845b2"
+  },
+  "Tests/AvailAppTests/RecoveryPresentationTests.swift": {
+    "mtime": 1784697537.9317393,
+    "ast_hash": "93bd038d84f177cbe5e4373b00b9678c",
+    "semantic_hash": "93bd038d84f177cbe5e4373b00b9678c"
+  },
+  "Tests/AvailAppTests/ZenViewModelTests.swift": {
+    "mtime": 1784697537.9319155,
+    "ast_hash": "d42816dcf42ad99e5701a4fe80fea85f",
+    "semantic_hash": "d42816dcf42ad99e5701a4fe80fea85f"
+  },
+  "Tests/AvailCoreTests/ReadingIndexStoreTests.swift": {
+    "mtime": 1784697537.932036,
+    "ast_hash": "ab289a57214cf62dd80a89465f27e4ff",
+    "semantic_hash": "ab289a57214cf62dd80a89465f27e4ff"
+  },
+  "Tests/AvailCoreTests/ReadingModelsTests.swift": {
+    "mtime": 1784697537.9321225,
+    "ast_hash": "a6f1a97f00dc67600ffaad3aa0a7dd23",
+    "semantic_hash": "a6f1a97f00dc67600ffaad3aa0a7dd23"
+  },
+  "Tests/AvailCoreTests/TextChunkerTests.swift": {
+    "mtime": 1784697537.932204,
+    "ast_hash": "80da5ae5a01c133e481c654def3e8ec3",
+    "semantic_hash": "80da5ae5a01c133e481c654def3e8ec3"
+  },
+  "Tests/AvailEPUBTests/EPUBIndexerTests.swift": {
+    "mtime": 1784697537.9323535,
+    "ast_hash": "a6c2f3125d6070c4525f48ef660fe95c",
+    "semantic_hash": "a6c2f3125d6070c4525f48ef660fe95c"
+  },
+  "Tests/AvailPDFTests/PDFIndexerTests.swift": {
+    "mtime": 1784697537.9324749,
+    "ast_hash": "0d6bdaef08cc104545f348ec6cc4e8db",
+    "semantic_hash": "0d6bdaef08cc104545f348ec6cc4e8db"
+  },
+  "Tests/AvailPlaybackTests/SystemNarrationEngineTests.swift": {
+    "mtime": 1784697537.9326005,
+    "ast_hash": "26fee2607f03714623ae897674a53f86",
+    "semantic_hash": "26fee2607f03714623ae897674a53f86"
+  },
+  "Tests/AvailUITests/AvailUITests.swift": {
+    "mtime": 1784697537.9329839,
+    "ast_hash": "9df4b347f6c363c156e43dec432993de",
+    "semantic_hash": "9df4b347f6c363c156e43dec432993de"
+  },
+  "script/build_and_run.sh": {
+    "mtime": 1784697537.9338813,
+    "ast_hash": "136f6deee79195b35dd5b5bdffb541fe",
+    "semantic_hash": "136f6deee79195b35dd5b5bdffb541fe"
+  },
+  ".github/ISSUE_TEMPLATE/bug_report.yml": {
+    "mtime": 1784697537.9119582,
+    "ast_hash": "47336227de33379380a44cc4d0475db6",
+    "semantic_hash": "47336227de33379380a44cc4d0475db6"
+  },
+  ".github/pull_request_template.md": {
+    "mtime": 1784697537.9122245,
+    "ast_hash": "5540ea12f4845e267250e2b92426cbe8",
+    "semantic_hash": "5540ea12f4845e267250e2b92426cbe8"
+  },
+  ".github/workflows/ci.yml": {
+    "mtime": 1784697537.912559,
+    "ast_hash": "1cc37d0896b9b0515258c0946652e33a",
+    "semantic_hash": "1cc37d0896b9b0515258c0946652e33a"
+  },
+  ".github/workflows/release.yml": {
+    "mtime": 1784697537.9128861,
+    "ast_hash": "7ed8421d03dc738bc4988c665f0b0a0c",
+    "semantic_hash": "7ed8421d03dc738bc4988c665f0b0a0c"
+  },
+  "CODE_OF_CONDUCT.md": {
+    "mtime": 1784697537.9226236,
+    "ast_hash": "890c5995facbc2ded8b3d2c8ca192228",
+    "semantic_hash": "890c5995facbc2ded8b3d2c8ca192228"
+  },
+  "CONTRIBUTING.md": {
+    "mtime": 1784697537.9245813,
+    "ast_hash": "42b623281b0519b44b39b059421a98b6",
+    "semantic_hash": "42b623281b0519b44b39b059421a98b6"
+  },
+  "Packaging/THIRD_PARTY_NOTICES.md": {
+    "mtime": 1784697537.9281971,
+    "ast_hash": "9415b2e219b443159979cd4f7e1f53ac",
+    "semantic_hash": "9415b2e219b443159979cd4f7e1f53ac"
+  },
+  "README.md": {
+    "mtime": 1784697537.928388,
+    "ast_hash": "c120b5d2542ee636930b7f5ac83a403a",
+    "semantic_hash": "c120b5d2542ee636930b7f5ac83a403a"
+  },
+  "docs/releasing.md": {
+    "mtime": 1784697537.9332244,
+    "ast_hash": "4e84cf422137e1ef49140d7e3573e606",
+    "semantic_hash": "4e84cf422137e1ef49140d7e3573e606"
+  },
+  "docs/ui-guidance.md": {
+    "mtime": 1784697537.9334185,
+    "ast_hash": "3317aa190c9d8df9f56d6ddc57ce559d",
+    "semantic_hash": "3317aa190c9d8df9f56d6ddc57ce559d"
+  },
+  "docs/verification/2026-07-16-native-xcode-liquid-glass.md": {
+    "mtime": 1784697537.9336572,
+    "ast_hash": "8f00d87466575bb344b8051d442d41f8",
+    "semantic_hash": "8f00d87466575bb344b8051d442d41f8"
+  }
+}
