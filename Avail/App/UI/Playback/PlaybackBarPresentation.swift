@@ -1,5 +1,12 @@
 import Foundation
 
+enum PersistentPlayerToggleAction: Equatable {
+    case pause
+    case resume
+    case play
+    case none
+}
+
 struct PlaybackBarPresentation: Equatable {
     let bookID: UUID
     let title: String
@@ -12,6 +19,21 @@ struct PlaybackBarPresentation: Equatable {
 
     var primaryActionLabel: String {
         isPlaying ? "Pause" : "Play"
+    }
+
+    static func toggleAction(for state: PlaybackState) -> PersistentPlayerToggleAction {
+        switch state {
+        case .playing:
+            .pause
+        case .paused:
+            .resume
+        case .stopped, .failed:
+            .play
+        case .preparingVoice:
+            .pause
+        case .bufferingForIndex, .seeking:
+            .none
+        }
     }
 
     static func make(
@@ -29,6 +51,10 @@ struct PlaybackBarPresentation: Equatable {
             statusText = "Preparing the next passage…"
             canSeek = false
             canTogglePlayback = false
+        case .preparingVoice:
+            statusText = "Preparing voice audio…"
+            canSeek = true
+            canTogglePlayback = true
         case .seeking:
             statusText = "Seeking…"
             canSeek = false
@@ -37,7 +63,7 @@ struct PlaybackBarPresentation: Equatable {
             let trimmed = description.trimmingCharacters(in: .whitespacesAndNewlines)
             statusText = trimmed.isEmpty ? "Playback unavailable" : trimmed
             canSeek = false
-            canTogglePlayback = false
+            canTogglePlayback = true
         case .stopped, .playing, .paused:
             statusText = nil
             canSeek = true

@@ -72,6 +72,22 @@ Sources:
 
 Decisions:
 
-- Keep Library, Privacy, and Licenses in the native Settings scene using a compact `TabView` and grouped forms.
+- Keep Library, Voices, Privacy, and Licenses in the native Settings scene using a compact `TabView` and grouped forms.
 - Explain failures with a specific title, plain-language cause, and one concrete recovery action. Show destructive removal only after confirmation, and always route managed files through Trash.
-- State the local-only document and speech boundary directly. Mention the limited macOS Now Playing metadata handoff separately and only in the context of active playback.
+- State the local-only document and speech boundary directly. Disclose that a user-selected loopback TTS server receives passage text and independently controls its storage, logging, and network behavior. Mention the limited macOS Now Playing metadata handoff separately and only in the context of active playback.
+
+## Local voices — 2026-09-24
+
+Sources:
+
+- [SwiftUI Settings scene](https://developer.apple.com/documentation/swiftui/settings/init%28content%3A%29)
+- [SwiftUI fileImporter](https://developer.apple.com/documentation/swiftui/view/fileimporter%28ispresented%3Aallowedcontenttypes%3Aallowsmultipleselection%3Aoncompletion%3Aoncancellation%3A%29)
+- [HIG: Writing](https://developer.apple.com/design/human-interface-guidelines/writing)
+
+Decisions:
+
+- Put linked models, managed model copies, and user-configured loopback servers in one Voices tab and the same per-book voice picker as system voices. Identify the source and availability of each voice in text, not color alone.
+- Explain the difference between Link and Copy before selection. Use the system folder importer, keep linked-folder security scope as short as practical, and confirm before sending a managed copy to Trash. Removing a link removes only Avail's reference.
+- Provide a short test using synthetic text, plus specific recovery actions for an incompatible folder, missing model, or unavailable server. A failed neural voice must preserve the reading position and offer a macOS voice.
+- Show preparation and generation progress without blocking navigation or the persistent player. Neural narration emphasizes a phrase in Zen with semantic background and a non-color cue; system narration keeps word-range emphasis. Voice changes take effect at the next phrase boundary.
+- Describe server setup as optional and local to this Mac. Before adding a server, say it receives passage text and that its privacy behavior is controlled outside Avail. Keep Now Playing disclosure separate.

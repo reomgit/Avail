@@ -92,7 +92,7 @@ final class NowPlayingController: NowPlayingControlling {
         switch state {
         case .playing:
             infoCenter.setPlaybackState(.playing)
-        case .paused, .bufferingForIndex, .seeking:
+        case .paused, .bufferingForIndex, .preparingVoice, .seeking:
             infoCenter.setPlaybackState(.paused)
         case .stopped, .failed:
             infoCenter.setPlaybackState(.stopped)

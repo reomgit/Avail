@@ -1,5 +1,6 @@
 import AvailCore
 import AvailPlayback
+@preconcurrency import AVFAudio
 import Foundation
 import Observation
 import SwiftData
@@ -17,6 +18,17 @@ final class AppEnvironment {
     var launchState: LaunchState
     var selectedBookID: UUID?
     var lastActionError: String?
+    private(set) var voiceCatalogError: String?
+    private(set) var voiceModelCatalog: VoiceModelCatalog?
+    private var neuralNarrationEngine: CompositeNarrationEngine?
+    private var voicePreviewPlayer: AVAudioPlayer?
+    var supportsLocalNeuralNarration: Bool {
+        #if arch(arm64)
+            true
+        #else
+            false
+        #endif
+    }
 
     let modelContainer: ModelContainer
     let locationStore: LibraryLocationStore
@@ -70,8 +82,27 @@ final class AppEnvironment {
             rootURL: supportRoot.appending(path: "ReadingIndexes", directoryHint: .isDirectory)
         )
         let indexing = IndexingCoordinator(libraryStore: library, indexStore: indexes)
+        let catalog: VoiceModelCatalog?
+        do {
+            catalog = try VoiceModelCatalog(
+                rootURL: supportRoot,
+                bookmarkCreationOptions: inMemory ? [] : [.withSecurityScope],
+                bookmarkResolutionOptions: inMemory ? [] : [.withSecurityScope, .withoutUI]
+            )
+        } catch {
+            catalog = nil
+            voiceCatalogError = error.localizedDescription
+        }
+        voiceModelCatalog = catalog
+        let neuralEngine = catalog.map {
+            CompositeNarrationEngine(
+                catalog: $0,
+                cacheURL: supportRoot.appending(path: "NarrationAudio", directoryHint: .isDirectory)
+            )
+        }
+        neuralNarrationEngine = neuralEngine
         let playback = PlaybackCoordinator(
-            engine: narrationEngine ?? SystemNarrationEngine(),
+            engine: narrationEngine ?? neuralEngine ?? SystemNarrationEngine(),
             indexStore: indexes,
             libraryStore: library,
             indexingCoordinator: indexing,
@@ -93,6 +124,19 @@ final class AppEnvironment {
                 launchState = .failed("Reconnect your library folder to continue.")
             }
         }
+    }
+
+    func previewVoice(id: String) async throws {
+        guard supportsLocalNeuralNarration else { throw NeuralHelperClientError.unsupportedMac }
+        guard let neuralNarrationEngine else { throw VoiceModelCatalogError.missingEntry }
+        let audio = try await neuralNarrationEngine.synthesizePreview(
+            voiceID: id,
+            text: "This is a short local voice preview from Avail."
+        )
+        let player = try AVAudioPlayer(data: audio.wavData)
+        player.prepareToPlay()
+        guard player.play() else { throw LocalSpeechServerError.invalidAudio }
+        voicePreviewPlayer = player
     }
 
     static func bootstrapForTesting(

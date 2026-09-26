@@ -25,6 +25,25 @@ jobs:
       - name: Resolve Xcode package dependencies
         run: xcodebuild -resolvePackageDependencies -project Avail.xcodeproj -scheme Avail
 
+      - name: Check dependency notices
+        run: |
+          python3 - <<'PY'
+          import json
+          import re
+          from pathlib import Path
+
+          lock = Path('Avail.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved')
+          notices = Path('Packaging/THIRD_PARTY_NOTICES.md')
+          text = re.sub(r'[^a-z0-9]', '', notices.read_text().lower())
+          pins = json.loads(lock.read_text())['pins']
+          missing = [pin['identity'] for pin in pins if re.sub(r'[^a-z0-9]', '', pin['identity'].lower()) not in text]
+          if missing:
+              raise SystemExit('Missing third-party notices for resolved packages: ' + ', '.join(missing))
+          PY
+          grep -Fxq 'This model is licensed under the Fish Audio Research License, Copyright © 39 AI, INC. All Rights Reserved.' Packaging/THIRD_PARTY_NOTICES.md
+          test -s Packaging/FISH_AUDIO_LICENSE.md
+          test -s Packaging/APACHE-2.0_LICENSE.txt
+
       - name: Import Developer ID certificate
         env:
           CERTIFICATE_BASE64: ${{ secrets.DEVELOPER_ID_APPLICATION_P12_BASE64 }}
@@ -85,7 +104,9 @@ jobs:
           VERSION="${GITHUB_REF_NAME#v}"
           rm -f dist/Avail-notarization.zip
           ditto -c -k --keepParent dist/Avail.app "dist/Avail-${VERSION}-universal.zip"
-          zip -j "dist/Avail-${VERSION}-licenses.zip" LICENSE Packaging/THIRD_PARTY_NOTICES.md
+          zip -j "dist/Avail-${VERSION}-licenses.zip" LICENSE Packaging/THIRD_PARTY_NOTICES.md Packaging/FISH_AUDIO_LICENSE.md Packaging/APACHE-2.0_LICENSE.txt
+          unzip -Z -1 "dist/Avail-${VERSION}-licenses.zip" | grep -Fxq 'FISH_AUDIO_LICENSE.md'
+          unzip -Z -1 "dist/Avail-${VERSION}-licenses.zip" | grep -Fxq 'APACHE-2.0_LICENSE.txt'
           (cd dist && shasum -a 256 ./*.zip > SHA256SUMS.txt)
 
       - name: Publish GitHub release

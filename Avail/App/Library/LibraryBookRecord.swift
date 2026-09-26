@@ -32,6 +32,11 @@ final class LibraryBookRecord {
     var utf16Offset: Int
     var normalizedWordOffset: Int
     var positionUpdatedAt: Date?
+    var audioClipKey: String?
+    var audioPhraseStartUTF16Offset: Int?
+    var audioPhraseEndUTF16Offset: Int?
+    var audioFrameOffset: Int64?
+    var audioSampleRate: Int?
     var voiceIdentifier: String?
     var narrationRate: Double
     var lastErrorDescription: String?
@@ -90,6 +95,11 @@ final class LibraryBookRecord {
         utf16Offset = position.utf16Offset
         normalizedWordOffset = position.normalizedWordOffset
         positionUpdatedAt = position.updatedAt
+        audioClipKey = position.audioResume?.clipKey
+        audioPhraseStartUTF16Offset = position.audioResume?.phraseStartUTF16Offset
+        audioPhraseEndUTF16Offset = position.audioResume?.phraseEndUTF16Offset
+        audioFrameOffset = position.audioResume?.frameOffset
+        audioSampleRate = position.audioResume?.sampleRate
         updatedAt = position.updatedAt
     }
 
@@ -101,7 +111,28 @@ final class LibraryBookRecord {
             chunkID: currentChunkID,
             utf16Offset: utf16Offset,
             normalizedWordOffset: normalizedWordOffset,
-            updatedAt: positionUpdatedAt
+            updatedAt: positionUpdatedAt,
+            audioResume: audioResumePoint()
+        )
+    }
+
+    private func audioResumePoint() -> AudioResumePoint? {
+        guard let audioClipKey,
+            let audioPhraseStartUTF16Offset,
+            let audioPhraseEndUTF16Offset,
+            let audioFrameOffset,
+            let audioSampleRate,
+            audioPhraseStartUTF16Offset >= 0,
+            audioPhraseEndUTF16Offset >= audioPhraseStartUTF16Offset,
+            audioFrameOffset >= 0,
+            (8_000...192_000).contains(audioSampleRate)
+        else { return nil }
+        return AudioResumePoint(
+            clipKey: audioClipKey,
+            phraseStartUTF16Offset: audioPhraseStartUTF16Offset,
+            phraseEndUTF16Offset: audioPhraseEndUTF16Offset,
+            frameOffset: audioFrameOffset,
+            sampleRate: audioSampleRate
         )
     }
 }

@@ -230,6 +230,121 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(try fixture.libraryStore.book(id: fixture.bookID)?.utf16Offset, 14)
     }
 
+    func testAudioFrameResumeSurvivesCoordinatorRelaunchAndReusesTheChunkPosition() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let resume = AudioResumePoint(
+            clipKey: "cached-phrase",
+            phraseStartUTF16Offset: 10,
+            phraseEndUTF16Offset: 26,
+            frameOffset: 48_000,
+            sampleRate: 24_000
+        )
+        try fixture.libraryStore.savePlaybackPosition(
+            ReadingPosition(
+                bookID: fixture.bookID,
+                sectionID: fixture.chunks[0].sectionID,
+                chunkID: fixture.chunks[0].id,
+                utf16Offset: 10,
+                normalizedWordOffset: 1,
+                updatedAt: Date(),
+                audioResume: resume
+            )
+        )
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.engine.spoken.last?.audioResume, resume)
+        XCTAssertEqual(fixture.engine.spoken.last?.startUTF16Offset, 10)
+    }
+
+    func testPhraseProgressPersistsFrameAndStartsTheNextPhraseAtBoundary() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        let range = NSRange(location: 0, length: 10)
+        let resume = AudioResumePoint(
+            clipKey: "phrase-one",
+            phraseStartUTF16Offset: 0,
+            phraseEndUTF16Offset: 10,
+            frameOffset: 12_000,
+            sampleRate: 24_000
+        )
+
+        fixture.engine.emit(.audioPosition(chunkID: fixture.chunks[0].id, range: range, resume: resume))
+        await settle()
+        fixture.coordinator.pause()
+        XCTAssertEqual(try fixture.libraryStore.book(id: fixture.bookID)?.readingPosition()?.audioResume, resume)
+
+        fixture.engine.emit(.phraseFinished(chunkID: fixture.chunks[0].id, nextUTF16Offset: 10))
+        await settle()
+        XCTAssertEqual(fixture.engine.spoken.last?.startUTF16Offset, 10)
+        XCTAssertNil(fixture.engine.spoken.last?.audioResume)
+    }
+
+    func testFailedNarrationCanRetryFromTheSavedPhrasePosition() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        record.voiceIdentifier = "neural:missing-source"
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 8, length: 4)))
+        await settle()
+        fixture.engine.emit(.failed(chunkID: fixture.chunks[0].id, reason: "Reconnect the voice."))
+        await settle()
+
+        XCTAssertEqual(fixture.coordinator.state, .failed("Reconnect the voice."))
+        let previousSpeakCount = fixture.engine.spoken.count
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.engine.spoken.count, previousSpeakCount + 1)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, "neural:missing-source")
+        XCTAssertEqual(fixture.engine.spoken.last?.startUTF16Offset, 8)
+    }
+
+    func testChoosingSystemVoiceAfterNeuralFailureResumesAtSavedPosition() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        record.voiceIdentifier = "neural:missing-source"
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 8, length: 4)))
+        await settle()
+        fixture.engine.emit(.failed(chunkID: fixture.chunks[0].id, reason: "Reconnect the voice."))
+        await settle()
+
+        fixture.coordinator.setVoiceIdentifier("system:Alex", bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.engine.spoken.count, 2)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, "system:Alex")
+        XCTAssertEqual(fixture.engine.spoken.last?.startUTF16Offset, 8)
+    }
+
+    func testGeneratedNarrationPublishesNowPlayingRateWhenAudioStarts() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        record.voiceIdentifier = "neural:local"
+        record.narrationRate = 1.5
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 0, length: 5)))
+        await settle()
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.playbackRate, 0)
+
+        fixture.engine.emit(.started(chunkID: fixture.chunks[0].id))
+        await settle()
+
+        XCTAssertEqual(fixture.nowPlaying.snapshots.last?.playbackRate, 1.5)
+    }
+
+    func testGeneratedNarrationRequestCarriesThePerBookSpeedMultiplier() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
+        record.voiceIdentifier = "neural:local"
+        record.narrationRate = 1.75
+
+        await fixture.coordinator.play(bookID: fixture.bookID)
+
+        XCTAssertEqual(fixture.engine.spoken.last?.speedMultiplier, 1.75)
+    }
+
     func testClearingActiveSessionStopsEngineAndResetsPlaybackContext() async throws {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
         await fixture.coordinator.play(bookID: fixture.bookID)

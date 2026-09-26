@@ -35,6 +35,10 @@
 		B5000000000000000000001A /* libAvailPDF.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000004 /* libAvailPDF.a */; };
 		B5000000000000000000001B /* LICENSE in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000B /* LICENSE */; };
 		B5000000000000000000001C /* THIRD_PARTY_NOTICES.md in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */; };
+		B5000000000000000000001E /* libAvailPlayback.a in Frameworks */ = {isa = PBXBuildFile; fileRef = B30000000000000000000002 /* libAvailPlayback.a */; };
+		B5000000000000000000001F /* MLXAudioTTS in Frameworks */ = {isa = PBXBuildFile; productRef = BA0000000000000000000003 /* MLXAudioTTS */; };
+		B50000000000000000000020 /* FISH_AUDIO_LICENSE.md in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000E /* FISH_AUDIO_LICENSE.md */; };
+		B50000000000000000000021 /* APACHE-2.0_LICENSE.txt in Resources */ = {isa = PBXBuildFile; fileRef = B3000000000000000000000F /* APACHE-2.0_LICENSE.txt */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -57,7 +61,22 @@
 		B60000000000000000000011 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000001; remoteInfo = AvailCore; };
 		B60000000000000000000012 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B10000000000000000000004; remoteInfo = AvailPDF; };
 		B60000000000000000000013 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = AF416F9D3007C09600019119; remoteInfo = Avail; };
+		B60000000000000000000014 = {isa = PBXContainerItemProxy; containerPortal = AF416F963007C09600019119 /* Project object */; proxyType = 1; remoteGlobalIDString = B1000000000000000000000B; remoteInfo = AvailNeuralHelper; };
 /* End PBXContainerItemProxy section */
+
+/* Begin PBXShellScriptBuildPhase section */
+		B43000000000000000000001 /* Embed XPC Services */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = ( );
+			inputPaths = ( "$(BUILT_PRODUCTS_DIR)/AvailNeuralHelper.xpc", );
+			name = "Embed XPC Services";
+			outputPaths = ( "$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/XPCServices/AvailNeuralHelper.xpc", );
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "set -e\nmkdir -p \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Contents/XPCServices\"\n/usr/bin/ditto \"${BUILT_PRODUCTS_DIR}/AvailNeuralHelper.xpc\" \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Contents/XPCServices/AvailNeuralHelper.xpc\"\n";
+		};
+/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXFileReference section */
 		AF416F9E3007C09600019119 /* Avail.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Avail.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -73,10 +92,13 @@
 		B3000000000000000000000A /* AvailUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = AvailUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		B3000000000000000000000B /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
 		B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Packaging/THIRD_PARTY_NOTICES.md; sourceTree = "<group>"; };
+		B3000000000000000000000D /* AvailNeuralHelper.xpc */ = {isa = PBXFileReference; explicitFileType = wrapper.xpc-service; includeInIndex = 0; path = AvailNeuralHelper.xpc; sourceTree = BUILT_PRODUCTS_DIR; };
+		B3000000000000000000000E /* FISH_AUDIO_LICENSE.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Packaging/FISH_AUDIO_LICENSE.md; sourceTree = "<group>"; };
+		B3000000000000000000000F /* APACHE-2.0_LICENSE.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = Packaging/APACHE-2.0_LICENSE.txt; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
-		AF416FA03007C09600019119 /* Avail */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Avail; sourceTree = "<group>"; };
+		AF416FA03007C09600019119 /* Avail */ = {isa = PBXFileSystemSynchronizedRootGroup; exceptions = (B22000000000000000000001, ); path = Avail; sourceTree = "<group>"; };
 		B20000000000000000000001 /* AvailCore */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailCore; sourceTree = "<group>"; };
 		B20000000000000000000002 /* AvailPlayback */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailPlayback; sourceTree = "<group>"; };
 		B20000000000000000000003 /* AvailEPUB */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Modules/AvailEPUB; sourceTree = "<group>"; };
@@ -87,9 +109,15 @@
 		B20000000000000000000008 /* AvailEPUBTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailEPUBTests; sourceTree = "<group>"; };
 		B20000000000000000000009 /* AvailPDFTests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailPDFTests; sourceTree = "<group>"; };
 		B2000000000000000000000A /* AvailUITests */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Tests/AvailUITests; sourceTree = "<group>"; };
+		B2000000000000000000000B /* NeuralHelper */ = {isa = PBXFileSystemSynchronizedRootGroup; path = Avail/NeuralHelper; sourceTree = "<group>"; };
 /* End PBXFileSystemSynchronizedRootGroup section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		B22000000000000000000001 = {isa = PBXFileSystemSynchronizedBuildFileExceptionSet; membershipExceptions = (NeuralHelper/NeuralHelperMain.swift, ); target = AF416F9D3007C09600019119 /* Avail */; };
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFrameworksBuildPhase section */
+		B4000000000000000000001C /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B5000000000000000000001E, B5000000000000000000001F, ); };
 		AF416F9B3007C09600019119 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000001, B50000000000000000000002, B50000000000000000000003, B50000000000000000000004, B50000000000000000000005, B50000000000000000000006, ); };
 		B40000000000000000000002 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = ( ); };
 		B40000000000000000000004 /* Frameworks */ = {isa = PBXFrameworksBuildPhase; files = (B50000000000000000000007, ); };
@@ -118,8 +146,11 @@
 				B20000000000000000000008 /* AvailEPUBTests */,
 				B20000000000000000000009 /* AvailPDFTests */,
 				B2000000000000000000000A /* AvailUITests */,
+				B2000000000000000000000B /* NeuralHelper */,
 				B3000000000000000000000B /* LICENSE */,
 				B3000000000000000000000C /* THIRD_PARTY_NOTICES.md */,
+				B3000000000000000000000E /* FISH_AUDIO_LICENSE.md */,
+				B3000000000000000000000F /* APACHE-2.0_LICENSE.txt */,
 				AF416F9F3007C09600019119 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -138,6 +169,7 @@
 				B30000000000000000000008 /* AvailEPUBTests.xctest */,
 				B30000000000000000000009 /* AvailPDFTests.xctest */,
 				B3000000000000000000000A /* AvailUITests.xctest */,
+				B3000000000000000000000D /* AvailNeuralHelper.xpc */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -148,9 +180,9 @@
 		AF416F9D3007C09600019119 /* Avail */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = AF416FA93007C09800019119;
-			buildPhases = (AF416F9A3007C09600019119, AF416F9B3007C09600019119, AF416F9C3007C09600019119, );
+			buildPhases = (AF416F9A3007C09600019119, AF416F9B3007C09600019119, AF416F9C3007C09600019119, B43000000000000000000001, );
 			buildRules = ( );
-			dependencies = (B70000000000000000000001, B70000000000000000000002, B70000000000000000000003, B70000000000000000000004, );
+			dependencies = (B70000000000000000000001, B70000000000000000000002, B70000000000000000000003, B70000000000000000000004, B70000000000000000000015, );
 			fileSystemSynchronizedGroups = (AF416FA03007C09600019119, );
 			name = Avail;
 			packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, );
@@ -168,6 +200,7 @@
 		B10000000000000000000008 /* AvailEPUBTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000008; buildPhases = (B40000000000000000000012, B40000000000000000000013, B40000000000000000000014, ); buildRules = ( ); dependencies = (B70000000000000000000010, B70000000000000000000011, ); fileSystemSynchronizedGroups = (B20000000000000000000008, ); name = AvailEPUBTests; packageProductDependencies = (BA0000000000000000000001, BA0000000000000000000002, ); productName = AvailEPUBTests; productReference = B30000000000000000000008; productType = "com.apple.product-type.bundle.unit-test"; };
 		B10000000000000000000009 /* AvailPDFTests */ = {isa = PBXNativeTarget; buildConfigurationList = B81000000000000000000009; buildPhases = (B40000000000000000000015, B40000000000000000000016, B40000000000000000000017, ); buildRules = ( ); dependencies = (B70000000000000000000012, B70000000000000000000013, ); fileSystemSynchronizedGroups = (B20000000000000000000009, ); name = AvailPDFTests; productName = AvailPDFTests; productReference = B30000000000000000000009; productType = "com.apple.product-type.bundle.unit-test"; };
 		B1000000000000000000000A /* AvailUITests */ = {isa = PBXNativeTarget; buildConfigurationList = B8100000000000000000000A; buildPhases = (B40000000000000000000018, B40000000000000000000019, B4000000000000000000001A, ); buildRules = ( ); dependencies = (B70000000000000000000014, ); fileSystemSynchronizedGroups = (B2000000000000000000000A, ); name = AvailUITests; productName = AvailUITests; productReference = B3000000000000000000000A; productType = "com.apple.product-type.bundle.ui-testing"; };
+		B1000000000000000000000B /* AvailNeuralHelper */ = {isa = PBXNativeTarget; buildConfigurationList = B8100000000000000000000B; buildPhases = (B4000000000000000000001B, B4000000000000000000001C, B4000000000000000000001D, ); buildRules = ( ); dependencies = (B70000000000000000000016, ); fileSystemSynchronizedGroups = (B2000000000000000000000B, ); name = AvailNeuralHelper; packageProductDependencies = (BA0000000000000000000003, ); productName = AvailNeuralHelper; productReference = B3000000000000000000000D; productType = "com.apple.product-type.xpc-service"; };
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -179,6 +212,7 @@
 				LastUpgradeCheck = 2620;
 				TargetAttributes = {
 					AF416F9D3007C09600019119 = {CreatedOnToolsVersion = 26.0; ProvisioningStyle = Automatic; };
+					B1000000000000000000000B = {CreatedOnToolsVersion = 26.0; ProvisioningStyle = Automatic; };
 					B10000000000000000000001 = {CreatedOnToolsVersion = 26.0; };
 					B10000000000000000000002 = {CreatedOnToolsVersion = 26.0; };
 					B10000000000000000000003 = {CreatedOnToolsVersion = 26.0; };
@@ -197,17 +231,18 @@
 			knownRegions = (en, Base, );
 			mainGroup = AF416F953007C09600019119;
 			minimizedProjectReferenceProxies = 1;
-			packageReferences = (B90000000000000000000001, B90000000000000000000002, );
+			packageReferences = (B90000000000000000000001, B90000000000000000000002, B90000000000000000000003, );
 			preferredProjectObjectVersion = 77;
 			productRefGroup = AF416F9F3007C09600019119;
 			projectDirPath = "";
 			projectRoot = "";
-			targets = (AF416F9D3007C09600019119, B10000000000000000000001, B10000000000000000000002, B10000000000000000000003, B10000000000000000000004, B10000000000000000000005, B10000000000000000000006, B10000000000000000000007, B10000000000000000000008, B10000000000000000000009, B1000000000000000000000A, );
+			targets = (AF416F9D3007C09600019119, B10000000000000000000001, B10000000000000000000002, B10000000000000000000003, B10000000000000000000004, B10000000000000000000005, B10000000000000000000006, B10000000000000000000007, B10000000000000000000008, B10000000000000000000009, B1000000000000000000000A, B1000000000000000000000B, );
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		AF416F9C3007C09600019119 /* Resources */ = {isa = PBXResourcesBuildPhase; files = (B5000000000000000000001B, B5000000000000000000001C, ); };
+		AF416F9C3007C09600019119 /* Resources */ = {isa = PBXResourcesBuildPhase; files = (B5000000000000000000001B, B5000000000000000000001C, B50000000000000000000020, B50000000000000000000021, ); };
+		B4000000000000000000001D /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
 		B4000000000000000000000B /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
 		B4000000000000000000000E /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
 		B40000000000000000000011 /* Resources */ = {isa = PBXResourcesBuildPhase; files = ( ); };
@@ -218,6 +253,7 @@
 
 /* Begin PBXSourcesBuildPhase section */
 		AF416F9A3007C09600019119 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
+		B4000000000000000000001B /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
 		B40000000000000000000001 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
 		B40000000000000000000003 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
 		B40000000000000000000005 /* Sources */ = {isa = PBXSourcesBuildPhase; files = ( ); };
@@ -251,6 +287,8 @@
 		B70000000000000000000012 = {isa = PBXTargetDependency; target = B10000000000000000000001; targetProxy = B60000000000000000000011; };
 		B70000000000000000000013 = {isa = PBXTargetDependency; target = B10000000000000000000004; targetProxy = B60000000000000000000012; };
 		B70000000000000000000014 = {isa = PBXTargetDependency; target = AF416F9D3007C09600019119; targetProxy = B60000000000000000000013; };
+		B70000000000000000000015 = {isa = PBXTargetDependency; target = B1000000000000000000000B; targetProxy = B60000000000000000000014; };
+		B70000000000000000000016 = {isa = PBXTargetDependency; target = B10000000000000000000002; targetProxy = B60000000000000000000002; };
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
@@ -278,6 +316,8 @@
 		B80000000000000000000012 /* Release AvailPDFTests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailPDFTests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; }; name = Release; };
 		B80000000000000000000013 /* Debug AvailUITests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = Avail; }; name = Debug; };
 		B80000000000000000000014 /* Release AvailUITests */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_STYLE = Automatic; GENERATE_INFOPLIST_FILE = YES; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.AvailUITests; PRODUCT_NAME = "$(TARGET_NAME)"; SKIP_INSTALL = YES; SWIFT_VERSION = 6.0; TEST_TARGET_NAME = Avail; }; name = Release; };
+		B80000000000000000000015 /* Debug AvailNeuralHelper */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = Configuration/AvailNeuralHelper.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; EXCLUDED_ARCHS = x86_64; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AvailNeuralHelper-Info.plist; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.Avail.NeuralHelper; PRODUCT_NAME = AvailNeuralHelper; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Debug; };
+		B80000000000000000000016 /* Release AvailNeuralHelper */ = {isa = XCBuildConfiguration; buildSettings = {CODE_SIGN_ENTITLEMENTS = Configuration/AvailNeuralHelper.entitlements; CODE_SIGN_STYLE = Automatic; CURRENT_PROJECT_VERSION = 1; DEVELOPMENT_TEAM = J8F7S27Z23; ENABLE_APP_SANDBOX = YES; ENABLE_HARDENED_RUNTIME = YES; EXCLUDED_ARCHS = x86_64; GENERATE_INFOPLIST_FILE = NO; INFOPLIST_FILE = Configuration/AvailNeuralHelper-Info.plist; MACOSX_DEPLOYMENT_TARGET = 26.0; MARKETING_VERSION = 0.1.0; PRODUCT_BUNDLE_IDENTIFIER = org.openavail.Avail.NeuralHelper; PRODUCT_NAME = AvailNeuralHelper; SKIP_INSTALL = YES; SWIFT_STRICT_CONCURRENCY = complete; SWIFT_VERSION = 6.0; }; name = Release; };
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -293,16 +333,19 @@
 		B81000000000000000000008 = {isa = XCConfigurationList; buildConfigurations = (B8000000000000000000000F, B80000000000000000000010, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		B81000000000000000000009 = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000011, B80000000000000000000012, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 		B8100000000000000000000A = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000013, B80000000000000000000014, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
+		B8100000000000000000000B = {isa = XCConfigurationList; buildConfigurations = (B80000000000000000000015, B80000000000000000000016, ); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release; };
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
 		B90000000000000000000001 /* ZIPFoundation */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/weichsel/ZIPFoundation.git"; requirement = {kind = upToNextMajorVersion; minimumVersion = 0.9.20; }; };
 		B90000000000000000000002 /* SwiftSoup */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/scinfu/SwiftSoup.git"; requirement = {kind = revision; revision = 83336847e47b2f499330c15426ad2fb180e72d9b; }; };
+		B90000000000000000000003 /* MLX Audio Swift */ = {isa = XCRemoteSwiftPackageReference; repositoryURL = "https://github.com/Blaizzy/mlx-audio-swift.git"; requirement = {kind = exactVersion; version = 0.1.3; }; };
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		BA0000000000000000000001 /* ZIPFoundation */ = {isa = XCSwiftPackageProductDependency; package = B90000000000000000000001; productName = ZIPFoundation; };
 		BA0000000000000000000002 /* SwiftSoup */ = {isa = XCSwiftPackageProductDependency; package = B90000000000000000000002; productName = SwiftSoup; };
+		BA0000000000000000000003 /* MLXAudioTTS */ = {isa = XCSwiftPackageProductDependency; package = B90000000000000000000003; productName = MLXAudioTTS; };
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = AF416F963007C09600019119 /* Project object */;

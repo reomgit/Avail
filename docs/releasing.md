@@ -2,7 +2,7 @@
 
 Avail uses the shared `Avail` Xcode scheme for local builds, archives, tests, profiling, and releases. Ordinary Debug builds do not require notarization. Public downloads are universal Developer ID-signed archives with the hardened runtime, notarization ticket, and staple.
 
-The application is sandboxed with only app-scoped security bookmarks and user-selected read/write access. It deliberately has no outgoing-network entitlement.
+The application is sandboxed with app-scoped security bookmarks, user-selected read/write access, and a network-client entitlement for an opt-in, user-configured loopback TTS server. System and imported-model narration work without a server. The app must reject non-loopback addresses and redirects in code; the entitlement itself does not enforce that restriction.
 
 ## Local Xcode archive
 
@@ -74,7 +74,7 @@ The tag-triggered workflow requires:
 - `APP_STORE_CONNECT_API_ISSUER_ID`
 - `APP_STORE_CONNECT_API_PRIVATE_KEY_BASE64`
 
-Before pushing a `vX.Y.Z` tag, set `MARKETING_VERSION` for the `Avail` target to `X.Y.Z`. The workflow imports the signing identity into a temporary keychain, creates an Xcode archive with both architectures, notarizes and staples the app, verifies it, and publishes the app, notices, and SHA-256 checksums.
+Before pushing a `vX.Y.Z` tag, set `MARKETING_VERSION` for the `Avail` target to `X.Y.Z`. The workflow imports the signing identity into a temporary keychain, creates an Xcode archive with both architectures, notarizes and staples the app, verifies it, and publishes the app, notices, the full Fish Audio agreement, Apache License 2.0 text, and SHA-256 checksums. Review the resolved Swift package graph and add license and notice text for every newly bundled dependency before releasing.
 
 Do not store signing or notarization credentials in the repository.
 
@@ -87,3 +87,5 @@ codesign --verify --deep --strict --verbose=2 dist/Avail.app
 xcrun stapler validate dist/Avail.app
 spctl --assess --type execute --verbose=2 dist/Avail.app
 ```
+
+Inspect the signed Apple Silicon neural helper separately with `codesign -dvvv --entitlements :-` and `lipo -archs`, and verify it is embedded in the app before notarization. Verify that `LICENSE`, `Packaging/THIRD_PARTY_NOTICES.md`, `Packaging/FISH_AUDIO_LICENSE.md`, and `Packaging/APACHE-2.0_LICENSE.txt` ship with the app and the release licenses archive. Compare every pin in `Avail.xcodeproj/project.xcworkspace/xcshareddata/swiftpm/Package.resolved` to the notices before a public release.

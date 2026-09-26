@@ -45,6 +45,28 @@ final class LibraryStoreTests: XCTestCase {
         XCTAssertTrue(FileManager.default.fileExists(atPath: libraryURL.appending(path: "Book.epub").path))
     }
 
+    func testGeneratedAudioResumeSurvivesLibraryPositionSave() async throws {
+        try prepareStore()
+        let source = sourceURL.appending(path: "Resume.epub")
+        try Data("synthetic book".utf8).write(to: source)
+        guard case let .created(bookID) = try await store.importBook(from: source) else {
+            return XCTFail("Expected a new record")
+        }
+        let point = AudioResumePoint(
+            clipKey: "current-phrase", phraseStartUTF16Offset: 8,
+            phraseEndUTF16Offset: 33, frameOffset: 12_345, sampleRate: 24_000
+        )
+        let position = ReadingPosition(
+            bookID: bookID, sectionID: UUID(), chunkID: UUID(),
+            utf16Offset: 8, normalizedWordOffset: 15,
+            updatedAt: Date(), audioResume: point
+        )
+
+        try store.savePlaybackPosition(position)
+
+        XCTAssertEqual(try store.book(id: bookID)?.readingPosition()?.audioResume, point)
+    }
+
     func testImportCopiesUnpackedEPUBPackage() async throws {
         try prepareStore()
         let source = try makeUnpackedEPUB(named: "Package.epub", in: sourceURL)

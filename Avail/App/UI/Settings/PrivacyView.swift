@@ -11,8 +11,14 @@ struct PrivacyView: View {
                     Label("Generated on this Mac", systemImage: "waveform")
                 }
                 LabeledContent("Network") {
-                    Label("No network client or analytics", systemImage: "network.slash")
+                    Label("No internet service or analytics", systemImage: "network.slash")
                 }
+            }
+            Section("Optional Local TTS Server") {
+                Text(
+                    "If you add a TTS server in Voices settings, Avail sends passage text and the selected voice request only to the loopback server address on this Mac. The separate server controls its own privacy behavior, including any logging or network access. Check its settings before connecting."
+                )
+                .foregroundStyle(.secondary)
             }
             Section("System Integration") {
                 Text(

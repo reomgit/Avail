@@ -7,6 +7,7 @@ import Observation
 enum PlaybackState: Equatable {
     case stopped
     case bufferingForIndex
+    case preparingVoice
     case playing
     case paused
     case seeking
@@ -27,6 +28,8 @@ final class PlaybackCoordinator {
     private var queuedChunks: [SpeechChunk] = []
     private var currentChunkGlobalWordOffset = 0
     private var currentUTF16Offset = 0
+    private var currentAudioResume: AudioResumePoint?
+    private var activeVoiceIdentifier: String?
     private(set) var currentNormalizedWordOffset = 0
     private var currentArtworkData: Data?
 
@@ -69,6 +72,9 @@ final class PlaybackCoordinator {
             switch state {
             case .paused:
                 resume()
+                return
+            case .failed:
+                speakCurrentChunk()
                 return
             case .stopped:
                 if currentChunk != nil {
@@ -222,7 +228,8 @@ final class PlaybackCoordinator {
                 chunks: Array(allChunks[sectionStartIndex..<min(sectionStartIndex + 2, allChunks.count)]),
                 globalStart: globalStart,
                 utf16Offset: 0,
-                normalizedWordOffset: globalStart
+                normalizedWordOffset: globalStart,
+                audioResume: nil
             )
             return
         }
@@ -235,7 +242,8 @@ final class PlaybackCoordinator {
                 chunks: Array(allChunks[exactIndex..<min(exactIndex + 2, allChunks.count)]),
                 globalStart: globalStart,
                 utf16Offset: saved.utf16Offset,
-                normalizedWordOffset: saved.normalizedWordOffset
+                normalizedWordOffset: saved.normalizedWordOffset,
+                audioResume: saved.audioResume
             )
             return
         }
@@ -252,7 +260,8 @@ final class PlaybackCoordinator {
             chunks: Array(allChunks[fallbackIndex..<min(fallbackIndex + 2, allChunks.count)]),
             globalStart: fallback.globalWordOffset,
             utf16Offset: 0,
-            normalizedWordOffset: fallback.globalWordOffset
+            normalizedWordOffset: fallback.globalWordOffset,
+            audioResume: nil
         )
     }
 
@@ -260,13 +269,15 @@ final class PlaybackCoordinator {
         chunks: [SpeechChunk],
         globalStart: Int,
         utf16Offset: Int,
-        normalizedWordOffset: Int
+        normalizedWordOffset: Int,
+        audioResume: AudioResumePoint? = nil
     ) {
         queuedChunks = Array(chunks.prefix(2))
         currentChunk = queuedChunks.first
         currentChunkGlobalWordOffset = globalStart
         currentUTF16Offset = utf16Offset
         currentNormalizedWordOffset = normalizedWordOffset
+        currentAudioResume = audioResume
     }
 
     private func speakCurrentChunk() {
@@ -275,16 +286,20 @@ final class PlaybackCoordinator {
             let record = try? libraryStore.book(id: bookID)
         else { return }
         let rate = Float(0.5 * max(0.5, min(record.narrationRate, 2)))
+        let speedMultiplier = Float(max(0.5, min(record.narrationRate, 2)))
+        activeVoiceIdentifier = record.voiceIdentifier
         engine.speak(
             NarrationRequest(
                 chunk: currentChunk,
                 voiceIdentifier: record.voiceIdentifier,
                 languageCode: record.languageCode,
                 rate: rate,
-                startUTF16Offset: currentUTF16Offset
+                speedMultiplier: speedMultiplier,
+                startUTF16Offset: currentUTF16Offset,
+                audioResume: currentAudioResume
             )
         )
-        setState(.playing)
+        setState(record.voiceIdentifier?.hasPrefix("neural:") == true ? .preparingVoice : .playing)
     }
 
     private func advanceAfterFinishedChunk() async {
@@ -320,7 +335,8 @@ final class PlaybackCoordinator {
             chunks: Array(allChunks[index..<min(index + 2, allChunks.count)]),
             globalStart: globalStart,
             utf16Offset: 0,
-            normalizedWordOffset: requestedWordOffset ?? globalStart
+            normalizedWordOffset: requestedWordOffset ?? globalStart,
+            audioResume: nil
         )
         persistImmediately()
         speakCurrentChunk()
@@ -367,11 +383,15 @@ final class PlaybackCoordinator {
             if let currentBookID { try? libraryStore.saveVoiceIdentifier(selectedIdentifier, bookID: currentBookID) }
         case .started:
             setState(.playing)
+            await updateNowPlaying()
+        case .preparing:
+            setState(.preparingVoice)
         case let .willSpeakRange(chunkID, range):
             guard chunkID == currentChunk?.id, let currentChunk else { return }
             highlightedChunkID = chunkID
             highlightRange = range
             currentUTF16Offset = range.location
+            currentAudioResume = nil
             currentNormalizedWordOffset =
                 currentChunkGlobalWordOffset
                 + wordCount(
@@ -380,14 +400,49 @@ final class PlaybackCoordinator {
                 )
             if let position = currentPosition() { persistence.schedule(position) }
             await updateNowPlaying()
+        case let .audioPosition(chunkID, range, resume):
+            guard chunkID == currentChunk?.id else { return }
+            highlightedChunkID = chunkID
+            highlightRange = range
+            currentUTF16Offset = range.location
+            currentAudioResume = resume
+            if let currentChunk {
+                currentNormalizedWordOffset =
+                    currentChunkGlobalWordOffset
+                    + wordCount(
+                        beforeUTF16Offset: range.location,
+                        in: currentChunk.text
+                    )
+            }
+            if let position = currentPosition() { persistence.schedule(position) }
+        case let .phraseFinished(chunkID, nextUTF16Offset):
+            guard chunkID == currentChunk?.id else { return }
+            currentUTF16Offset = nextUTF16Offset
+            currentAudioResume = nil
+            if let currentChunk {
+                currentNormalizedWordOffset =
+                    currentChunkGlobalWordOffset
+                    + wordCount(
+                        beforeUTF16Offset: nextUTF16Offset,
+                        in: currentChunk.text
+                    )
+            }
+            persistImmediately()
+            speakCurrentChunk()
+        case let .failed(chunkID, reason):
+            guard chunkID == currentChunk?.id else { return }
+            persistImmediately()
+            setState(.failed(reason))
         case .paused:
             setState(.paused)
+            persistImmediately()
         case .resumed:
             setState(.playing)
+            await updateNowPlaying()
         case let .finished(chunkID):
             if chunkID == currentChunk?.id { await advanceAfterFinishedChunk() }
-        case .cancelled:
-            break
+        case let .cancelled(chunkID):
+            if chunkID == currentChunk?.id { persistImmediately() }
         }
     }
 
@@ -412,7 +467,8 @@ final class PlaybackCoordinator {
             chunkID: currentChunk.id,
             utf16Offset: currentUTF16Offset,
             normalizedWordOffset: currentNormalizedWordOffset,
-            updatedAt: Date()
+            updatedAt: Date(),
+            audioResume: currentAudioResume
         )
     }
 
@@ -421,7 +477,15 @@ final class PlaybackCoordinator {
     }
 
     private func restartCurrentUtteranceIfNeeded(bookID: UUID) {
-        guard currentBookID == bookID, state == .playing, currentChunk != nil else { return }
+        guard currentBookID == bookID, currentChunk != nil else { return }
+        switch state {
+        case .playing:
+            if activeVoiceIdentifier?.hasPrefix("neural:") == true { return }
+        case .failed:
+            break
+        default:
+            return
+        }
         engine.stop()
         speakCurrentChunk()
     }

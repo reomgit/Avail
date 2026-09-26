@@ -8,6 +8,9 @@ struct SettingsRootView: View {
             LibrarySettingsView()
                 .tabItem { Label("Library", systemImage: "books.vertical") }
                 .tag("library")
+            VoicesSettingsView()
+                .tabItem { Label("Voices", systemImage: "waveform") }
+                .tag("voices")
             PrivacyView()
                 .tabItem { Label("Privacy", systemImage: "hand.raised") }
                 .tag("privacy")
@@ -15,6 +18,6 @@ struct SettingsRootView: View {
                 .tabItem { Label("Licenses", systemImage: "doc.text") }
                 .tag("licenses")
         }
-        .frame(width: 560, height: 380)
+        .frame(width: 620, height: 580)
     }
 }

@@ -116,12 +116,17 @@ final class EndToEndAcceptanceTests: XCTestCase {
             guard let enumerator = FileManager.default.enumerator(at: directory, includingPropertiesForKeys: nil) else { return [URL]() }
             return enumerator.compactMap { $0 as? URL }.filter { $0.pathExtension == "swift" }
         }
-        let productionText = try swiftFiles.map { try String(contentsOf: $0, encoding: .utf8) }.joined(separator: "\n")
+        let networkClientFiles = try swiftFiles.filter {
+            try String(contentsOf: $0, encoding: .utf8).contains("URLSession")
+        }.map { $0.lastPathComponent }
 
-        XCTAssertFalse(productionText.contains("URLSession"))
-        XCTAssertFalse(productionText.contains("import Network"))
-        XCTAssertFalse(productionText.contains("Analytics"))
-        XCTAssertFalse(productionText.contains("Telemetry"))
+        XCTAssertEqual(networkClientFiles, ["LocalSpeechServerClient.swift"])
+        for file in swiftFiles {
+            let contents = try String(contentsOf: file, encoding: .utf8)
+            XCTAssertFalse(contents.contains("import Network"), file.lastPathComponent)
+            XCTAssertFalse(contents.contains("Analytics"), file.lastPathComponent)
+            XCTAssertFalse(contents.contains("Telemetry"), file.lastPathComponent)
+        }
     }
 
     private func makeServices() throws -> AcceptanceServices {

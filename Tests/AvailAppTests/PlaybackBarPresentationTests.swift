@@ -49,7 +49,14 @@ final class PlaybackBarPresentationTests: XCTestCase {
         XCTAssertFalse(seeking.canTogglePlayback)
         XCTAssertEqual(failed.statusText, "Speech unavailable")
         XCTAssertFalse(failed.canSeek)
-        XCTAssertFalse(failed.canTogglePlayback)
+        XCTAssertTrue(failed.canTogglePlayback)
+    }
+
+    func testPersistentPlayerRetriesWhenCurrentPlaybackHasFailed() {
+        XCTAssertEqual(
+            PlaybackBarPresentation.toggleAction(for: .failed("Voice is unavailable")),
+            .play
+        )
     }
 
     func testPlayingAndPausedStatesMapPrimaryAction() throws {

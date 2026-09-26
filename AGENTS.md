@@ -4,11 +4,11 @@ This file applies to the entire repository. A more deeply nested `AGENTS.md` may
 
 ## Mission
 
-Avail is an open-source, local-first macOS listener for user-owned EPUB and selectable-text PDF books. It indexes on the Mac, narrates with installed system voices, and can synchronize narration with a separate Zen reading window.
+Avail is an open-source, local-first macOS listener for user-owned EPUB and selectable-text PDF books. It indexes on the Mac, narrates with installed system voices or user-supplied local voices, and can synchronize narration with a separate Zen reading window.
 
 Optimize for a trustworthy reading and listening experience, not feature count. Preserve these product promises unless the maintainer explicitly approves a recorded change:
 
-- Books and speech stay on the Mac.
+- Avail keeps books and its own speech generation on the Mac. An opt-in server on this Mac receives passage text when its voice is selected; the separate server controls its own privacy and network behavior.
 - The library remains in a folder selected and controlled by the user.
 - Core reading and narration work without networking, accounts, analytics, uploads, or cloud services.
 - Playback can start after 450 committed indexed words while the remainder is prepared.
@@ -17,7 +17,7 @@ Optimize for a trustworthy reading and listening experience, not feature count. 
 - The first narration provider uses installed macOS voices through the pluggable `NarrationEngine` boundary.
 - The current product is macOS 26+ with Swift 6. OCR, DRM-protected or encrypted EPUBs, non-macOS platforms, and cloud narration are outside the MVP.
 
-The only deliberate metadata handoff is to macOS Now Playing during active playback. Keep that disclosure narrow and user-visible.
+The only deliberate system metadata handoff is to macOS Now Playing during active playback. Keep that disclosure narrow and user-visible. Separately disclose passage text sent to a user-configured loopback TTS server and that server's independent privacy behavior.
 
 ## Sources of truth
 
@@ -90,7 +90,7 @@ The user's explicit task may supply the product decision. Still state consequent
 
 Stop and obtain or record approval before changing any of these:
 
-- The local-only/no-account/no-analytics/no-upload boundary or outgoing-network entitlement.
+- The local-only/no-account/no-analytics/no-upload boundary, remote connectivity, or the approved loopback use of the network-client entitlement.
 - Supported platforms or document formats, including OCR or DRM behavior.
 - The 450-word progressive-playback threshold.
 - Exact-position resume, stable identity, or playback continuity across routes and windows.
@@ -135,18 +135,19 @@ The Xcode project uses file-system-synchronized target roots. File placement can
 
 Treat EPUBs, PDFs, their metadata, and filesystem paths as private and untrusted input.
 
-- Never add production networking, analytics, telemetry, document uploads, cloud accounts, or remote speech to a core flow.
+- Never add production networking beyond the opt-in, literal-loopback TTS adapter; do not add analytics, telemetry, document uploads, cloud accounts, or remote speech to a core flow. Reject redirects and remote addresses, and disclose that a separate local server receives passage text and controls its own storage, logging, and network behavior.
 - Never log, paste into issues, or include in fixtures a user's book text, personal paths, bookmarks, or library metadata.
 - Use synthetic or public-domain fixtures and redact private paths from diagnostics.
 - Keep security-scoped resource access as short as practical: import or bookmark creation, not the lifetime of the app.
-- Preserve App Sandbox, app-scoped security bookmarks, user-selected read/write access, hardened runtime, and the absence of outgoing-network entitlement.
+- Preserve App Sandbox, app-scoped security bookmarks, user-selected read/write access, and hardened runtime. The approved network-client entitlement exists only for the user-configured loopback TTS adapter; application code must prohibit remote endpoints.
 - Do not place signing certificates, API keys, notarization credentials, or secret values in the repository, logs, commands shown to users, or fixtures.
 - Validate malformed and adversarial document structures, cancellation, resource bounds, and partial failures. Parser work must not assume trusted archives or markup.
 
 Classify data before changing storage behavior:
 
-- **Durable user data:** source books in the chosen library, the library bookmark, SwiftData library records, reading position, voice/rate choices, and other user preferences.
+- **Durable user data:** source books in the chosen library, the library bookmark, SwiftData library records, reading position, voice/rate choices, linked-model bookmarks, managed model copies under Application Support, voice catalog, Keychain server credentials, and other user preferences.
 - **Rebuildable derived data:** reading indexes under Application Support.
+- **Generated audio cache:** local phrase WAV files under Application Support, bounded by pruning older files after the cache grows beyond about 512 MiB. If an active clip is missing, regenerate from its phrase start.
 - **Source-derivable but not currently self-healing:** cached artwork. A missing or corrupt artwork file for a complete book currently becomes unavailable rather than being rebuilt automatically, so do not treat cache deletion as harmless without adding and testing a rebuild path.
 
 Changes to import, relocation, schema, persistence, index recovery, or deletion must demonstrate idempotency, interruption recovery, and no loss of source books or reading progress. Route recoverable managed-file deletion through Trash and show confirmation before destructive user-facing actions.
@@ -230,14 +231,14 @@ xcodebuild build \
   CODE_SIGNING_ALLOWED=NO
 ```
 
-For an unsigned local Release bundle, validate architecture, metadata, expected source entitlements, and absence of the outgoing-network entitlement:
+For an unsigned local Release bundle, validate architecture, metadata, expected source entitlements, and the embedded neural helper:
 
 ```bash
 ALLOW_UNSIGNED=1 EXPECTED_ARCHS='arm64 x86_64' \
   bash Scripts/verify-app.sh .build/ci/Build/Products/Release/Avail.app
 ```
 
-`ALLOW_UNSIGNED=1` does not prove the built bundle's signature, hardened runtime, or embedded entitlements, and `verify-app.sh` does not inspect bundled license notices. For a public signed artifact, run the signed-bundle inspection in `docs/releasing.md` and verify that `LICENSE` and `Packaging/THIRD_PARTY_NOTICES.md` are present in the release deliverables.
+`ALLOW_UNSIGNED=1` does not prove the built bundle's signature, hardened runtime, or embedded entitlements. `verify-app.sh` checks bundled license resources but does not prove third-party license coverage. For a public signed artifact, run the signed-bundle inspection in `docs/releasing.md` and verify that `LICENSE`, `Packaging/THIRD_PARTY_NOTICES.md`, `Packaging/FISH_AUDIO_LICENSE.md`, and `Packaging/APACHE-2.0_LICENSE.txt` are present in the release deliverables.
 
 `bash script/build_and_run.sh <build|test|archive|run|debug|logs|telemetry|verify>` is the deterministic local helper. Its launch modes terminate an already running Avail process; do not use them when that side effect is outside the task.
 

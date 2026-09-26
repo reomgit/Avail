@@ -212,12 +212,17 @@ struct LibraryRootView: View {
         guard let playback = environment.playbackCoordinator else { return }
         if playback.currentBookID != book.id {
             Task { await playback.play(bookID: book.id) }
-        } else if playback.state == .playing {
-            playback.pause()
-        } else if playback.state == .paused {
-            playback.resume()
-        } else if playback.state == .stopped {
-            Task { await playback.play(bookID: book.id) }
+        } else {
+            switch PlaybackBarPresentation.toggleAction(for: playback.state) {
+            case .pause:
+                playback.pause()
+            case .resume:
+                playback.resume()
+            case .play:
+                Task { await playback.play(bookID: book.id) }
+            case .none:
+                break
+            }
         }
     }
 

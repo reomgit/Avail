@@ -1,6 +1,7 @@
 import SwiftUI
 
 struct VoiceAndRateControls: View {
+    @Environment(AppEnvironment.self) private var environment
     let model: ZenViewModel
 
     private let rates: [Double] = [0.75, 1, 1.25, 1.5, 1.75, 2]
@@ -18,12 +19,50 @@ struct VoiceAndRateControls: View {
 
             Picker("Voice", selection: voiceBinding) {
                 Text("Automatic").tag("")
-                ForEach(model.availableVoices) { voice in
-                    Text("\(voice.name) — \(voice.languageCode)").tag(voice.id)
+                Section("macOS System Voices") {
+                    ForEach(model.availableVoices.filter { !$0.id.hasPrefix("neural:") }) { voice in
+                        Text("\(voice.name) — \(voice.languageCode)").tag(voice.id)
+                    }
+                }
+                if environment.supportsLocalNeuralNarration {
+                    let groups = VoicePickerGroups(entries: environment.voiceModelCatalog?.entries ?? [])
+                    if !groups.imported.isEmpty {
+                        Section("Fish Audio Models · Built with Fish Audio") {
+                            ForEach(groups.imported) { entry in
+                                Text("\(entry.name) — \(entry.source == .linked ? "Linked" : "Copied")")
+                                    .tag(entry.providerVoiceID)
+                            }
+                        }
+                    }
+                    if !groups.servers.isEmpty {
+                        Section("Local TTS Servers") {
+                            ForEach(groups.servers) { entry in
+                                Text(entry.name).tag(entry.providerVoiceID)
+                            }
+                        }
+                    }
+                }
+                if let selected = model.book?.voiceIdentifier, !selected.isEmpty {
+                    let isSavedCustomVoice =
+                        environment.voiceModelCatalog?.entries.contains {
+                            $0.providerVoiceID == selected
+                        } == true
+                    if isSavedCustomVoice && !environment.supportsLocalNeuralNarration {
+                        Text("Custom voice unavailable on this Mac")
+                            .tag(selected)
+                    } else if let savedSystemVoice = model.availableVoices.first(where: { $0.id == "system:\(selected)" }) {
+                        Text("\(savedSystemVoice.name) — Saved macOS Voice")
+                            .tag(selected)
+                    } else if !model.availableVoices.contains(where: { $0.id == selected }),
+                        !(environment.voiceModelCatalog?.entries.contains(where: { $0.providerVoiceID == selected }) ?? false)
+                    {
+                        Text("Unavailable voice · Choose another")
+                            .tag(selected)
+                    }
                 }
             }
             .pickerStyle(.menu)
-            .accessibilityHint("Uses only voices installed on this Mac.")
+            .accessibilityHint("Choose a macOS voice, a Fish Audio model, or a TTS server running on this Mac.")
         }
     }
 

@@ -94,6 +94,28 @@ public struct SpeechChunk: Identifiable, Codable, Hashable, Sendable {
     }
 }
 
+public struct AudioResumePoint: Codable, Hashable, Sendable {
+    public let clipKey: String
+    public let phraseStartUTF16Offset: Int
+    public let phraseEndUTF16Offset: Int
+    public var frameOffset: Int64
+    public let sampleRate: Int
+
+    public init(
+        clipKey: String,
+        phraseStartUTF16Offset: Int,
+        phraseEndUTF16Offset: Int,
+        frameOffset: Int64,
+        sampleRate: Int
+    ) {
+        self.clipKey = clipKey
+        self.phraseStartUTF16Offset = phraseStartUTF16Offset
+        self.phraseEndUTF16Offset = phraseEndUTF16Offset
+        self.frameOffset = frameOffset
+        self.sampleRate = sampleRate
+    }
+}
+
 public struct ReadingPosition: Codable, Equatable, Sendable {
     public let bookID: UUID
     public var sectionID: UUID
@@ -101,6 +123,7 @@ public struct ReadingPosition: Codable, Equatable, Sendable {
     public var utf16Offset: Int
     public var normalizedWordOffset: Int
     public var updatedAt: Date
+    public var audioResume: AudioResumePoint?
 
     public init(
         bookID: UUID,
@@ -108,7 +131,8 @@ public struct ReadingPosition: Codable, Equatable, Sendable {
         chunkID: UUID,
         utf16Offset: Int,
         normalizedWordOffset: Int,
-        updatedAt: Date
+        updatedAt: Date,
+        audioResume: AudioResumePoint? = nil
     ) {
         self.bookID = bookID
         self.sectionID = sectionID
@@ -116,6 +140,7 @@ public struct ReadingPosition: Codable, Equatable, Sendable {
         self.utf16Offset = utf16Offset
         self.normalizedWordOffset = normalizedWordOffset
         self.updatedAt = updatedAt
+        self.audioResume = audioResume
     }
 }
 
