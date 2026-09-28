@@ -135,6 +135,37 @@ final class CompositeNarrationEngine: NarrationEngine {
         }
     }
 
+    func prepareVoice(identifier: String) async throws {
+        guard identifier.hasPrefix("neural:") else { return }
+        guard let modelID = UUID(uuidString: String(identifier.dropFirst("neural:".count))),
+            let entry = catalog.entries.first(where: { $0.id == modelID })
+        else { throw VoiceModelCatalogError.missingEntry }
+        switch entry.source {
+        case .linked, .managed:
+            let lease: VoiceModelAccessLease
+            do {
+                lease = try catalog.beginModelAccess(id: entry.id)
+            } catch {
+                throw VoiceModelCatalogError.inaccessibleModel
+            }
+            let bookmark = try lease.makeHelperTransferBookmark()
+            try await helper.prepareModel(bookmark: bookmark)
+        case .loopbackServer:
+            guard let url = entry.serverURL, let model = entry.modelID, let voice = entry.voiceID else {
+                throw VoiceModelCatalogError.invalidServerFields
+            }
+            let configuration = try LocalSpeechServerConfiguration(
+                baseURL: url, modelID: model, voiceID: voice, authToken: try catalog.authToken(for: entry.id)
+            )
+            _ = try await LocalSpeechServerClient(configuration: configuration).synthesize(text: "Ready.")
+        }
+    }
+
+    func prepareAudio(for request: NarrationRequest) async throws {
+        guard request.voiceIdentifier?.hasPrefix("neural:") == true else { return }
+        try await generated.prepareAudio(for: request)
+    }
+
     func pause() { activeIsGenerated ? generated.pause() : system.pause() }
     func resume() { activeIsGenerated ? generated.resume() : system.resume() }
     func stop() {

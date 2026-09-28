@@ -71,24 +71,16 @@ final class GeneratedNarrationEngine: NSObject, NarrationEngine, AVAudioPlayerDe
                 let key = Self.key(voiceID: resolvedVoiceID, text: phrase.text)
                 self.clipKey = key
                 let clipURL = self.cacheURL.appending(path: "\(key).wav")
-                let audio: GeneratedAudio
+                let cached = self.cachedAudio(at: clipURL)
                 let canResume =
                     audioResume?.clipKey == key
                     && audioResume?.phraseStartUTF16Offset == phrase.range.location
                     && audioResume?.phraseEndUTF16Offset == NSMaxRange(phrase.range)
                     && audioResume.map { (8_000...192_000).contains($0.sampleRate) && $0.frameOffset >= 0 } == true
-                    && FileManager.default.fileExists(atPath: clipURL.path)
-                if canResume {
-                    audio = GeneratedAudio(
-                        wavData: try Data(contentsOf: clipURL),
-                        sampleRate: audioResume?.sampleRate ?? 0
-                    )
-                } else {
-                    audio = try await generate(voiceID, phrase.text)
-                    try Task.checkCancellation()
-                    try audio.wavData.write(to: clipURL, options: .atomic)
-                    self.pruneCache(keeping: key)
-                }
+                    && cached?.sampleRate == audioResume?.sampleRate
+                let audio = try await self.audio(
+                    voiceID: voiceID, phrase: phrase, key: key, url: clipURL, cached: cached
+                )
                 guard !Task.isCancelled, self.generationID == generationID else { return }
                 try self.start(audio: audio, at: clipURL, resume: canResume ? audioResume : nil)
             } catch is CancellationError {
@@ -97,6 +89,45 @@ final class GeneratedNarrationEngine: NSObject, NarrationEngine, AVAudioPlayerDe
                 guard self.generationID == generationID else { return }
                 self.continuation.yield(.failed(chunkID: request.chunk.id, reason: error.localizedDescription))
             }
+        }
+    }
+
+    func prepareAudio(for request: NarrationRequest) async throws {
+        guard let phrase = splitter.next(in: request.chunk, fromUTF16Offset: request.startUTF16Offset) else { return }
+        let voiceID = request.voiceIdentifier ?? ""
+        let resolvedVoiceID = try await cacheIdentity(voiceID)
+        try Task.checkCancellation()
+        try await prepare(voiceID)
+        try Task.checkCancellation()
+        let key = Self.key(voiceID: resolvedVoiceID, text: phrase.text)
+        let url = cacheURL.appending(path: "\(key).wav")
+        _ = try await audio(voiceID: voiceID, phrase: phrase, key: key, url: url, cached: cachedAudio(at: url))
+    }
+
+    private func audio(
+        voiceID: String,
+        phrase: SpeechPhrase,
+        key: String,
+        url: URL,
+        cached: GeneratedAudio?
+    ) async throws -> GeneratedAudio {
+        if let cached { return cached }
+        let generated = try await generate(voiceID, phrase.text)
+        try Task.checkCancellation()
+        try generated.wavData.write(to: url, options: .atomic)
+        pruneCache(keeping: key)
+        return generated
+    }
+
+    private func cachedAudio(at url: URL) -> GeneratedAudio? {
+        guard FileManager.default.fileExists(atPath: url.path) else { return nil }
+        do {
+            let rate = Int(try AVAudioFile(forReading: url).fileFormat.sampleRate)
+            guard (8_000...192_000).contains(rate) else { throw LocalSpeechServerError.invalidAudio }
+            return GeneratedAudio(wavData: try Data(contentsOf: url), sampleRate: rate)
+        } catch {
+            try? FileManager.default.removeItem(at: url)
+            return nil
         }
     }
 

@@ -12,6 +12,7 @@ Avail is an MVP for macOS 26 or later with Swift 6.
 - Start listening after the first 450 indexed words while the rest of the book prepares.
 - Narrate with voices installed on the Mac; no cloud speech service is required.
 - On Apple Silicon, link or copy a supported local neural voice model, or connect to a TTS server running on this Mac. System voices remain the default.
+- A selected neural voice loads and prepares its first audio passage from the locally indexed book text before Play becomes available.
 - Resume at the exact spoken range after relaunch or a rebuilt derived index.
 - Browse in a native Music-style library with an always-visible Liquid Glass player.
 - Open Apple Books-style details without interrupting the current narration session.

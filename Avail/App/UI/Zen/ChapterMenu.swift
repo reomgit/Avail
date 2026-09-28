@@ -16,7 +16,7 @@ struct ChapterMenu: View {
                             Text(section.title ?? "Chapter \(section.ordinal + 1)")
                         }
                     }
-                    .disabled(section.chunkIDs.isEmpty)
+                    .disabled(section.chunkIDs.isEmpty || !model.playbackControlState.canTogglePlayback)
                 }
             }
             .menuStyle(.borderlessButton)

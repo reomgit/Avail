@@ -151,6 +151,28 @@ final class ZenViewModelTests: XCTestCase {
         XCTAssertEqual(state.toggleAction, .unavailable)
     }
 
+    func testZenPlayIsUnavailableUntilSelectedNeuralVoiceIsReady() {
+        let bookID = UUID()
+        let state = ZenPlaybackControlState.make(
+            bookID: bookID, currentBookID: nil, playbackState: .stopped,
+            voicePreparation: .loading
+        )
+
+        XCTAssertFalse(state.canTogglePlayback)
+        XCTAssertEqual(state.toggleAction, .unavailable)
+    }
+
+    func testZenCanRetryAfterAudioGenerationFails() {
+        let bookID = UUID()
+        let state = ZenPlaybackControlState.make(
+            bookID: bookID, currentBookID: bookID, playbackState: .failed("Audio failed"),
+            voicePreparation: .ready
+        )
+
+        XCTAssertTrue(state.canTogglePlayback)
+        XCTAssertEqual(state.toggleAction, .start)
+    }
+
     private func settle() async {
         await Task.yield()
         await Task.yield()

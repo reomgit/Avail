@@ -39,13 +39,21 @@ final class PlaybackBarPresentationTests: XCTestCase {
     func testVoicePreparationShowsWindowLoadingActivityOnlyWhileItIsPreparing() throws {
         let preparing = try XCTUnwrap(NarrationActivityPresentation.make(state: .preparingVoice))
 
-        XCTAssertEqual(preparing.label, "Loading voice model…")
+        XCTAssertEqual(preparing.label, "Preparing audio passage…")
+        XCTAssertEqual(
+            NarrationActivityPresentation.make(state: .stopped, isModelLoading: true)?.label,
+            "Loading voice model…"
+        )
+        XCTAssertEqual(
+            NarrationActivityPresentation.make(state: .stopped, isFirstPassagePreparing: true)?.label,
+            "Preparing first passage…"
+        )
         XCTAssertNil(NarrationActivityPresentation.make(state: .playing))
         XCTAssertNil(NarrationActivityPresentation.make(state: .paused))
         XCTAssertNil(NarrationActivityPresentation.make(state: .failed("Choose another voice.")))
         XCTAssertEqual(
             NarrationActivityPresentation.make(state: .stopped, isPreviewPreparing: true)?.label,
-            "Loading voice model…"
+            "Preparing audio passage…"
         )
     }
 
@@ -77,6 +85,19 @@ final class PlaybackBarPresentationTests: XCTestCase {
 
         XCTAssertFalse(presentation.canTogglePlayback)
         XCTAssertEqual(PlaybackBarPresentation.toggleAction(for: .preparingVoice), .none)
+    }
+
+    func testSavedNeuralBookCannotShowEnabledPlayBeforeModelLoads() throws {
+        let book = makeResumableBook(updatedAt: Date())
+        book.voiceIdentifier = "neural:fixture"
+        let context = PersistentPlayerContext.make(
+            books: [book], currentBookID: nil, state: .stopped, chapterTitle: nil,
+            voicePreparation: { _ in .loading }
+        )
+
+        XCTAssertEqual(context.mode, .resumable(book.id))
+        XCTAssertFalse(try XCTUnwrap(context.presentation).canTogglePlayback)
+        XCTAssertEqual(context.presentation?.statusText, "Loading voice model…")
     }
 
     func testPlayingAndPausedStatesMapPrimaryAction() throws {

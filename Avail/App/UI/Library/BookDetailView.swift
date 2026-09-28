@@ -39,6 +39,9 @@ struct BookDetailView: View {
         .task(id: indexingProgress?.indexedWordCount) {
             await model.refreshSections(bookID: bookID, indexStore: environment.indexStore)
         }
+        .task(id: model.book?.voiceIdentifier) {
+            environment.playbackCoordinator?.prepareVoiceIfNeeded(bookID: bookID)
+        }
         .confirmationDialog(
             removalTitle,
             isPresented: removalIsPresented,
@@ -159,11 +162,27 @@ struct BookDetailView: View {
                 .tint(.accentColor)
                 .disabled(!canPlay(book))
 
+                if let readiness = environment.playbackCoordinator?.voicePreparationState(for: book.id) {
+                    switch readiness {
+                    case .unloaded:
+                        Button("Load Voice", systemImage: "arrow.down.circle") {
+                            environment.playbackCoordinator?.prepareVoiceIfNeeded(bookID: book.id)
+                        }
+                    case let .failed(reason):
+                        Button("Retry Loading Voice", systemImage: "arrow.clockwise") {
+                            environment.playbackCoordinator?.prepareVoiceIfNeeded(bookID: book.id, retry: true)
+                        }
+                        .help(reason)
+                    case .loading, .ready:
+                        EmptyView()
+                    }
+                }
+
                 Button("Open Zen", systemImage: "rectangle.split.2x1") {
                     openWindow(value: book.id)
                 }
                 .buttonStyle(.glass)
-                .disabled(!canPlay(book))
+                .disabled(!book.isPlayable || book.state == .missing || book.state == .failed)
 
                 moreMenu(book)
             }
@@ -242,7 +261,7 @@ struct BookDetailView: View {
                             .padding(.vertical, 11)
                         }
                         .buttonStyle(.plain)
-                        .disabled(section.chunkIDs.isEmpty)
+                        .disabled(section.chunkIDs.isEmpty || !canPlay(book))
                         .accessibilityHint("Start listening from this chapter")
 
                         if index < model.sections.count - 1 {
@@ -289,11 +308,17 @@ struct BookDetailView: View {
 
     private func canPlay(_ book: LibraryBookRecord) -> Bool {
         guard book.state != .missing && book.state != .failed && book.isPlayable else { return false }
-        return environment.playbackCoordinator?.currentBookID != book.id
-            || environment.playbackCoordinator?.state != .preparingVoice
+        guard let playback = environment.playbackCoordinator else { return false }
+        if playback.currentBookID == book.id && playback.state == .playing { return true }
+        return playback.state != .preparingVoice
+            && playback.voicePreparationState(for: book.id) == .ready
     }
 
     private func primaryActionTitle(_ book: LibraryBookRecord) -> String {
+        if environment.playbackCoordinator?.voicePreparationState(for: book.id) == .loading {
+            return environment.playbackCoordinator?.isPreparingFirstPassage == true
+                ? "Preparing Passage…" : "Loading Voice…"
+        }
         guard let playback = environment.playbackCoordinator,
             playback.currentBookID == book.id
         else {
@@ -303,7 +328,7 @@ struct BookDetailView: View {
         case .playing:
             return "Pause"
         case .preparingVoice:
-            return "Loading Voice…"
+            return "Preparing Passage…"
         default:
             return "Continue"
         }

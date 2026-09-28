@@ -6,7 +6,9 @@ struct NarrationActivityStrip: View {
     private var presentation: NarrationActivityPresentation? {
         NarrationActivityPresentation.make(
             state: environment.playbackCoordinator?.state,
-            isPreviewPreparing: environment.isPreparingVoicePreview
+            isPreviewPreparing: environment.isPreparingVoicePreview,
+            isModelLoading: environment.playbackCoordinator?.isLoadingVoiceModel ?? false,
+            isFirstPassagePreparing: environment.playbackCoordinator?.isPreparingFirstPassage ?? false
         )
     }
 

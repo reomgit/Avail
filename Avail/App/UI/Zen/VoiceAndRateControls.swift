@@ -63,6 +63,30 @@ struct VoiceAndRateControls: View {
             }
             .pickerStyle(.menu)
             .accessibilityHint("Choose a macOS voice, a Fish Audio model, or a TTS server running on this Mac.")
+
+            switch model.playback.voicePreparationState(for: model.bookID) {
+            case .ready:
+                EmptyView()
+            case .unloaded:
+                Text("Voice model is not loaded yet.")
+                    .foregroundStyle(.secondary)
+                Button("Load Voice") {
+                    model.playback.prepareVoiceIfNeeded(bookID: model.bookID)
+                }
+            case .loading:
+                Text(
+                    model.playback.isPreparingFirstPassage
+                        ? "Preparing the first audio passage before playback…"
+                        : "Loading voice model before playback…"
+                )
+                .foregroundStyle(.secondary)
+            case let .failed(reason):
+                Text(reason)
+                    .foregroundStyle(.secondary)
+                Button("Retry Loading Voice") {
+                    model.playback.prepareVoiceIfNeeded(bookID: model.bookID, retry: true)
+                }
+            }
         }
     }
 

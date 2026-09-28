@@ -33,14 +33,19 @@ struct ZenPlaybackControlState: Equatable {
     static func make(
         bookID: UUID,
         currentBookID: UUID?,
-        playbackState: PlaybackState
+        playbackState: PlaybackState,
+        voicePreparation: VoicePreparationState = .ready
     ) -> ZenPlaybackControlState {
         guard currentBookID == bookID else {
             return ZenPlaybackControlState(
                 isPlaying: false,
-                canTogglePlayback: true,
-                toggleAction: .start
+                canTogglePlayback: voicePreparation == .ready,
+                toggleAction: voicePreparation == .ready ? .start : .unavailable
             )
+        }
+
+        if voicePreparation != .ready && playbackState != .playing {
+            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: false, toggleAction: .unavailable)
         }
 
         switch playbackState {
@@ -52,7 +57,9 @@ struct ZenPlaybackControlState: Equatable {
             return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .resume)
         case .preparingVoice:
             return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: false, toggleAction: .unavailable)
-        case .bufferingForIndex, .seeking, .failed:
+        case .failed:
+            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .start)
+        case .bufferingForIndex, .seeking:
             return ZenPlaybackControlState(
                 isPlaying: false,
                 canTogglePlayback: false,
@@ -94,14 +101,16 @@ final class ZenViewModel {
         ZenPlaybackControlState.make(
             bookID: bookID,
             currentBookID: playback.currentBookID,
-            playbackState: playback.state
+            playbackState: playback.state,
+            voicePreparation: playback.voicePreparationState(for: bookID)
         )
     }
     var playbackPresentation: PlaybackBarPresentation? {
         PlaybackBarPresentation.make(
             book: book,
             state: isConnectedToActivePlayback ? playback.state : .stopped,
-            chapterTitle: currentChapterTitle
+            chapterTitle: currentChapterTitle,
+            voicePreparation: playback.voicePreparationState(for: bookID)
         )
     }
     var currentSectionID: UUID? { playback.currentChunk?.sectionID }
@@ -138,6 +147,7 @@ final class ZenViewModel {
     func load() async {
         do {
             book = try libraryStore.book(id: bookID)
+            playback.prepareVoiceIfNeeded(bookID: bookID)
             chunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
             sections = try await indexStore.sections(bookID: bookID).sorted { $0.ordinal < $1.ordinal }
             loadError = nil

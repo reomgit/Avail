@@ -36,6 +36,7 @@ final class BookArtworkViewTests: XCTestCase {
             book: book,
             artworkURL: nil,
             isPlayable: true,
+            canOpenZen: true,
             openBook: {},
             play: {},
             openZen: {}
@@ -44,6 +45,7 @@ final class BookArtworkViewTests: XCTestCase {
             books: [book],
             openBook: { _ in },
             canPlay: { _ in true },
+            canOpenZen: { _ in true },
             play: { _ in },
             openZen: { _ in },
             artworkURL: { _ in nil }

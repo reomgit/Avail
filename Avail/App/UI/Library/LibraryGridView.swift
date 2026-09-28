@@ -4,6 +4,7 @@ struct LibraryGridView: View {
     let books: [LibraryBookRecord]
     let openBook: (LibraryBookRecord) -> Void
     let canPlay: (LibraryBookRecord) -> Bool
+    let canOpenZen: (LibraryBookRecord) -> Bool
     let play: (LibraryBookRecord) -> Void
     let openZen: (LibraryBookRecord) -> Void
     let artworkURL: (LibraryBookRecord) -> URL?
@@ -25,9 +26,10 @@ struct LibraryGridView: View {
                             book: book,
                             artworkURL: artworkURL(book),
                             isPlayable: canPlay(book),
+                            canOpenZen: canOpenZen(book),
                             openBook: { openBook(book) },
                             play: { if canPlay(book) { play(book) } },
-                            openZen: { if canPlay(book) { openZen(book) } }
+                            openZen: { if canOpenZen(book) { openZen(book) } }
                         )
                     }
                 }

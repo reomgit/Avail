@@ -103,3 +103,13 @@ Sources:
 Decision:
 
 - Show a labeled, indeterminate linear progress strip immediately below the native title bar while a local voice model loads or a short voice test is synthesized. Use a shared view in the library, Settings, and Zen windows so ongoing narration stays visible as people switch windows. Keep play, pause, seek, and remote-toggle actions unavailable until loading has either completed or failed; this prevents a cold model request from being mistaken for active playback. Hide the strip once audio is ready or playback fails. The model API does not report a reliable loading percentage, so do not imply determinate progress.
+
+## Model readiness before Play — 2026-09-28
+
+Context: A selected Fish Audio voice could still accept Play before its helper had loaded model weights. The loading strip then appeared after the user had already requested narration, and phrase synthesis was mislabeled as model loading.
+
+Decision: Selecting or opening a book with a neural voice loads its model and prepares the first audio phrase from the committed reading index. Disable Play, chapter playback, and remote Play until both steps complete; show separate loading and first-passage labels, plus a retry action on failure. Preserve the saved reading position on failure. After Play, synthesize further bounded phrases from the already committed reading index and label that wait as passage preparation. Keep the 450-word progressive indexing threshold so the whole book does not need to finish indexing before narration. System voices retain immediate Play. A local TTS server is probed with synthetic text before preparing its first book phrase; the separate server controls its own model lifetime.
+
+Alternative: Starting a cold model load from Play gave ambiguous feedback and allowed old system speech to continue when the voice changed. Loading every catalog model at startup would use excessive memory. Preparation follows the selected book or voice instead.
+
+Acceptance: A cold neural selection cannot send a narration request before model loading and first-phrase generation succeed; reopening a saved neural book initiates preparation; failed or missing sources retain position and offer retry or system voice selection; narration begins only from committed index text. The cached first phrase is reused when Play is pressed. Keyboard, VoiceOver, compact player, Zen, and window switching use the same readiness state.

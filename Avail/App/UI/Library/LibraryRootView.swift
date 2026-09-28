@@ -31,7 +31,8 @@ struct LibraryRootView: View {
                 LibraryGridView(
                     books: displayedBooks,
                     openBook: openBook,
-                    canPlay: model.canPlay,
+                    canPlay: canPlay,
+                    canOpenZen: model.canPlay,
                     play: play,
                     openZen: openZen,
                     artworkURL: artworkURL
@@ -89,6 +90,9 @@ struct LibraryRootView: View {
                 books.contains(where: { $0.id == selectedBookID })
             {
                 model.openBook(selectedBookID)
+            }
+            if let bookID = persistentPlayerContext.book?.id {
+                environment.playbackCoordinator?.prepareVoiceIfNeeded(bookID: bookID)
             }
         }
         .task {
@@ -153,7 +157,8 @@ struct LibraryRootView: View {
             books: books,
             currentBookID: playback.currentBookID,
             state: playback.state,
-            chapterTitle: playback.currentChapterTitle
+            chapterTitle: playback.currentChapterTitle,
+            voicePreparation: playback.voicePreparationState(for:)
         )
     }
 
@@ -175,7 +180,7 @@ struct LibraryRootView: View {
             openZen: {
                 if let selectedBook { openZen(selectedBook) }
             },
-            canPlay: model.canPlay(selectedBook),
+            canPlay: selectedBook.map(canPlay) ?? false,
             canOpenZen: model.canPlay(selectedBook)
         )
     }
@@ -190,6 +195,12 @@ struct LibraryRootView: View {
     private func openBook(_ book: LibraryBookRecord) {
         model.openBook(book.id)
         environment.selectedBookID = book.id
+        environment.playbackCoordinator?.prepareVoiceIfNeeded(bookID: book.id)
+    }
+
+    private func canPlay(_ book: LibraryBookRecord) -> Bool {
+        model.canPlay(book)
+            && environment.playbackCoordinator?.voicePreparationState(for: book.id) == .ready
     }
 
     private func play(_ book: LibraryBookRecord) {

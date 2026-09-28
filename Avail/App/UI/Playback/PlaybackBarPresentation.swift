@@ -10,9 +10,16 @@ enum PersistentPlayerToggleAction: Equatable {
 struct NarrationActivityPresentation: Equatable {
     let label: String
 
-    static func make(state: PlaybackState?, isPreviewPreparing: Bool = false) -> NarrationActivityPresentation? {
+    static func make(
+        state: PlaybackState?,
+        isPreviewPreparing: Bool = false,
+        isModelLoading: Bool = false,
+        isFirstPassagePreparing: Bool = false
+    ) -> NarrationActivityPresentation? {
+        if isModelLoading { return NarrationActivityPresentation(label: "Loading voice model…") }
+        if isFirstPassagePreparing { return NarrationActivityPresentation(label: "Preparing first passage…") }
         guard state == .preparingVoice || isPreviewPreparing else { return nil }
-        return NarrationActivityPresentation(label: "Loading voice model…")
+        return NarrationActivityPresentation(label: "Preparing audio passage…")
     }
 }
 
@@ -48,7 +55,8 @@ struct PlaybackBarPresentation: Equatable {
     static func make(
         book: LibraryBookRecord?,
         state: PlaybackState,
-        chapterTitle: String?
+        chapterTitle: String?,
+        voicePreparation: VoicePreparationState = .ready
     ) -> PlaybackBarPresentation? {
         guard let book else { return nil }
 
@@ -61,7 +69,7 @@ struct PlaybackBarPresentation: Equatable {
             canSeek = false
             canTogglePlayback = false
         case .preparingVoice:
-            statusText = "Loading voice model…"
+            statusText = voicePreparation == .ready ? "Preparing audio passage…" : "Preparing voice and first passage…"
             canSeek = false
             canTogglePlayback = false
         case .seeking:
@@ -81,15 +89,22 @@ struct PlaybackBarPresentation: Equatable {
 
         let trimmedAuthor = book.author?.trimmingCharacters(in: .whitespacesAndNewlines)
         let author = trimmedAuthor.flatMap { $0.isEmpty ? nil : $0 } ?? "Unknown Author"
+        let voiceStatus: String?
+        switch voicePreparation {
+        case .ready: voiceStatus = nil
+        case .unloaded: voiceStatus = "Load the selected voice to play"
+        case .loading: voiceStatus = "Loading voice model…"
+        case let .failed(reason): voiceStatus = reason
+        }
         return PlaybackBarPresentation(
             bookID: book.id,
             title: book.title,
             author: author,
             chapterTitle: chapterTitle,
-            statusText: statusText,
+            statusText: statusText ?? voiceStatus,
             isPlaying: state == .playing,
             canSeek: canSeek,
-            canTogglePlayback: canTogglePlayback
+            canTogglePlayback: canTogglePlayback && (state == .playing || voicePreparation == .ready)
         )
     }
 }
@@ -102,14 +117,16 @@ struct LibraryPlaybackBarContext {
         books: [LibraryBookRecord],
         currentBookID: UUID?,
         state: PlaybackState,
-        chapterTitle: String?
+        chapterTitle: String?,
+        voicePreparation: (UUID) -> VoicePreparationState = { _ in .ready }
     ) -> LibraryPlaybackBarContext? {
         guard let currentBookID,
             let book = books.first(where: { $0.id == currentBookID }),
             let presentation = PlaybackBarPresentation.make(
                 book: book,
                 state: state,
-                chapterTitle: chapterTitle
+                chapterTitle: chapterTitle,
+                voicePreparation: voicePreparation(book.id)
             )
         else { return nil }
 
@@ -132,7 +149,8 @@ struct PersistentPlayerContext {
         books: [LibraryBookRecord],
         currentBookID: UUID?,
         state: PlaybackState,
-        chapterTitle: String?
+        chapterTitle: String?,
+        voicePreparation: (UUID) -> VoicePreparationState = { _ in .ready }
     ) -> PersistentPlayerContext {
         if let currentBookID,
             let activeBook = books.first(where: {
@@ -141,7 +159,8 @@ struct PersistentPlayerContext {
             let presentation = PlaybackBarPresentation.make(
                 book: activeBook,
                 state: state,
-                chapterTitle: chapterTitle
+                chapterTitle: chapterTitle,
+                voicePreparation: voicePreparation(activeBook.id)
             )
         {
             return PersistentPlayerContext(
@@ -168,7 +187,8 @@ struct PersistentPlayerContext {
             let presentation = PlaybackBarPresentation.make(
                 book: resumableBook,
                 state: .stopped,
-                chapterTitle: nil
+                chapterTitle: nil,
+                voicePreparation: voicePreparation(resumableBook.id)
             )
         {
             return PersistentPlayerContext(

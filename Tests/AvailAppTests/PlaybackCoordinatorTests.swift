@@ -39,6 +39,114 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.engine.spoken.map(\.chunk.id), [fixture.chunks[0].id, fixture.chunks[1].id])
     }
 
+    func testNeuralPlayWaitsForAnExplicitlyLoadedModel() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let voiceID = "neural:\(UUID().uuidString)"
+        try fixture.libraryStore.saveVoiceIdentifier(voiceID, bookID: fixture.bookID)
+        fixture.engine.blocksPreparation = true
+        fixture.engine.blocksAudioPreparation = true
+
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let didStartLoading = await waitUntil { fixture.engine.preparationContinuation != nil }
+        XCTAssertTrue(didStartLoading)
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        XCTAssertTrue(fixture.engine.spoken.isEmpty, "Play must not start narration while the model is unloaded")
+        XCTAssertEqual(fixture.coordinator.voicePreparationState(for: fixture.bookID), .loading)
+
+        fixture.engine.finishPreparation()
+        let didStartAudioPreparation = await waitUntil { fixture.engine.audioPreparationContinuation != nil }
+        XCTAssertTrue(didStartAudioPreparation)
+        XCTAssertEqual(fixture.coordinator.voicePreparationState(for: fixture.bookID), .loading)
+        XCTAssertTrue(fixture.engine.spoken.isEmpty)
+        fixture.engine.finishAudioPreparation()
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, voiceID)
+    }
+
+    func testOpeningSecondBookWithSameVoicePreparesItsOwnPassage() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        let secondBook = try await fixture.addBook(named: "Second", chunkWordCounts: [20])
+        let voiceID = "neural:\(UUID().uuidString)"
+        try fixture.libraryStore.saveVoiceIdentifier(voiceID, bookID: fixture.bookID)
+        try fixture.libraryStore.saveVoiceIdentifier(voiceID, bookID: secondBook.bookID)
+        fixture.engine.blocksPreparation = true
+
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let didStartFirst = await waitUntil { fixture.engine.preparationContinuation != nil }
+        XCTAssertTrue(didStartFirst)
+        fixture.engine.blocksPreparation = false
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: secondBook.bookID)
+        fixture.engine.finishPreparation()
+
+        let secondReady = await waitUntil { fixture.coordinator.voicePreparationState(for: secondBook.bookID) == .ready }
+        XCTAssertTrue(secondReady)
+        XCTAssertEqual(fixture.engine.preparedAudio.last?.chunk.id, secondBook.chunks[0].id)
+    }
+
+    func testFailedModelLoadPreservesPositionAndRequiresRetry() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        try fixture.libraryStore.saveVoiceIdentifier("neural:missing", bookID: fixture.bookID)
+        fixture.engine.preparationError = "Model folder is missing."
+
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let didFail = await waitUntil {
+            fixture.coordinator.voicePreparationState(for: fixture.bookID) == .failed("Model folder is missing.")
+        }
+        XCTAssertTrue(didFail)
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        XCTAssertTrue(fixture.engine.spoken.isEmpty)
+        XCTAssertEqual(fixture.engine.prepareCallCount, 1)
+
+        fixture.engine.preparationError = nil
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID, retry: true)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        XCTAssertEqual(fixture.engine.spoken.count, 1)
+        XCTAssertEqual(try fixture.libraryStore.book(id: fixture.bookID)?.normalizedWordOffset, 0)
+    }
+
+    func testSelectingNeuralVoiceStopsSystemSpeechUntilModelIsLoaded() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.started(chunkID: fixture.chunks[0].id))
+        await settle()
+        fixture.engine.blocksPreparation = true
+
+        fixture.coordinator.setVoiceIdentifier("neural:new-model", bookID: fixture.bookID)
+        let didStartLoading = await waitUntil { fixture.engine.preparationContinuation != nil }
+        XCTAssertTrue(didStartLoading)
+        XCTAssertEqual(fixture.engine.spoken.count, 1)
+        XCTAssertEqual(fixture.coordinator.state, .preparingVoice)
+        XCTAssertEqual(fixture.engine.stopCallCount, 1)
+
+        fixture.engine.finishPreparation()
+        let didStartNeural = await waitUntil { fixture.engine.spoken.count == 2 }
+        XCTAssertTrue(didStartNeural)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, "neural:new-model")
+    }
+
+    func testChangingBackToSystemCancelsObsoleteFirstPassagePreparation() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.started(chunkID: fixture.chunks[0].id))
+        await settle()
+        fixture.engine.blocksAudioPreparation = true
+
+        fixture.coordinator.setVoiceIdentifier("neural:obsolete", bookID: fixture.bookID)
+        let didStart = await waitUntil { fixture.engine.audioPreparationContinuation != nil }
+        XCTAssertTrue(didStart)
+        fixture.coordinator.setVoiceIdentifier("system:Alex", bookID: fixture.bookID)
+        fixture.engine.finishAudioPreparation()
+        await settle()
+
+        XCTAssertEqual(fixture.engine.spoken.count, 2)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, "system:Alex")
+        XCTAssertEqual(fixture.coordinator.voicePreparationState(for: fixture.bookID), .ready)
+    }
+
     func testStartingAnotherBookStopsPreviousSession() async throws {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20, 20])
         let secondBook = try await fixture.addBook(named: "Second", chunkWordCounts: [20])
@@ -284,6 +392,9 @@ final class PlaybackCoordinatorTests: XCTestCase {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
         let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
         record.voiceIdentifier = "neural:missing-source"
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
         await fixture.coordinator.play(bookID: fixture.bookID)
         fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 8, length: 4)))
         await settle()
@@ -304,6 +415,9 @@ final class PlaybackCoordinatorTests: XCTestCase {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
         let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
         record.voiceIdentifier = "neural:missing-source"
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
         await fixture.coordinator.play(bookID: fixture.bookID)
         fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 8, length: 4)))
         await settle()
@@ -325,6 +439,8 @@ final class PlaybackCoordinatorTests: XCTestCase {
         fixture.coordinator.pause()
 
         fixture.coordinator.setVoiceIdentifier("neural:local", bookID: fixture.bookID)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
         fixture.coordinator.resume()
 
         XCTAssertEqual(fixture.engine.spoken.count, 2)
@@ -338,6 +454,9 @@ final class PlaybackCoordinatorTests: XCTestCase {
         record.voiceIdentifier = "neural:local"
         record.narrationRate = 1.5
 
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
         await fixture.coordinator.play(bookID: fixture.bookID)
         fixture.engine.emit(.willSpeakRange(chunkID: fixture.chunks[0].id, range: NSRange(location: 0, length: 5)))
         await settle()
@@ -355,6 +474,9 @@ final class PlaybackCoordinatorTests: XCTestCase {
         record.voiceIdentifier = "neural:local"
         record.narrationRate = 1.75
 
+        fixture.coordinator.prepareVoiceIfNeeded(bookID: fixture.bookID)
+        let isReady = await waitUntil { fixture.coordinator.voicePreparationState(for: fixture.bookID) == .ready }
+        XCTAssertTrue(isReady)
         await fixture.coordinator.play(bookID: fixture.bookID)
 
         XCTAssertEqual(fixture.engine.spoken.last?.speedMultiplier, 1.75)
@@ -560,12 +682,42 @@ private final class FakeNarrationEngine: NarrationEngine {
     private(set) var pauseCallCount = 0
     private(set) var resumeCallCount = 0
     private(set) var stopCallCount = 0
+    private(set) var prepareCallCount = 0
+    var blocksPreparation = false
+    var blocksAudioPreparation = false
+    var preparationError: String?
+    private(set) var preparationContinuation: CheckedContinuation<Void, Never>?
+    private(set) var audioPreparationContinuation: CheckedContinuation<Void, Never>?
+    private(set) var preparedAudio: [NarrationRequest] = []
 
     init() {
         (events, continuation) = AsyncStream.makeStream(of: NarrationEvent.self)
     }
 
     func speak(_ request: NarrationRequest) { spoken.append(request) }
+    func prepareVoice(identifier: String) async throws {
+        prepareCallCount += 1
+        if blocksPreparation {
+            await withCheckedContinuation { preparationContinuation = $0 }
+        }
+        if let preparationError {
+            throw NSError(domain: "Fixture", code: 1, userInfo: [NSLocalizedDescriptionKey: preparationError])
+        }
+    }
+    func finishPreparation() {
+        preparationContinuation?.resume()
+        preparationContinuation = nil
+    }
+    func prepareAudio(for request: NarrationRequest) async throws {
+        preparedAudio.append(request)
+        if blocksAudioPreparation {
+            await withCheckedContinuation { audioPreparationContinuation = $0 }
+        }
+    }
+    func finishAudioPreparation() {
+        audioPreparationContinuation?.resume()
+        audioPreparationContinuation = nil
+    }
     func pause() { pauseCallCount += 1 }
     func resume() { resumeCallCount += 1 }
     func stop() { stopCallCount += 1 }

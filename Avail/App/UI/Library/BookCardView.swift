@@ -4,6 +4,7 @@ struct BookCardView: View {
     let book: LibraryBookRecord
     let artworkURL: URL?
     let isPlayable: Bool
+    let canOpenZen: Bool
     let openBook: () -> Void
     let play: () -> Void
     let openZen: () -> Void
@@ -34,7 +35,7 @@ struct BookCardView: View {
             Button("Listen", systemImage: "play.fill", action: play)
                 .disabled(!isPlayable)
             Button("Open Zen", systemImage: "rectangle.split.2x1", action: openZen)
-                .disabled(!isPlayable)
+                .disabled(!canOpenZen)
         }
         .accessibilityLabel(book.title)
         .accessibilityValue("\(book.author ?? "Unknown author"), \(BookStatePresentation(state: book.state).accessibilityValue)")

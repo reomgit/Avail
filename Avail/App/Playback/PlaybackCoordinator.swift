@@ -14,6 +14,13 @@ enum PlaybackState: Equatable {
     case failed(String)
 }
 
+enum VoicePreparationState: Equatable {
+    case ready
+    case unloaded
+    case loading
+    case failed(String)
+}
+
 @MainActor
 @Observable
 final class PlaybackCoordinator {
@@ -30,6 +37,15 @@ final class PlaybackCoordinator {
     private var currentUTF16Offset = 0
     private var currentAudioResume: AudioResumePoint?
     private var activeVoiceIdentifier: String?
+    private var preparedVoiceIdentifier: String?
+    private var preparedAudioBookID: UUID?
+    private var voicePreparationBookID: UUID?
+    private var preparingVoiceIdentifier: String?
+    private var voicePreparationError: String?
+    private var voicePreparationTask: Task<Void, Never>?
+    private var voicePreparationID = UUID()
+    private var startAfterVoicePreparation = false
+    private(set) var isPreparingFirstPassage = false
     private(set) var currentNormalizedWordOffset = 0
     private var currentArtworkData: Data?
 
@@ -43,6 +59,123 @@ final class PlaybackCoordinator {
     var followMode = true
 
     var availableVoices: [NarrationVoice] { engine.voices }
+    var isLoadingVoiceModel: Bool { preparingVoiceIdentifier != nil && !isPreparingFirstPassage }
+
+    func voicePreparationState(for bookID: UUID) -> VoicePreparationState {
+        guard let voiceID = (try? libraryStore.book(id: bookID))?.voiceIdentifier,
+            voiceID.hasPrefix("neural:")
+        else { return .ready }
+        if preparingVoiceIdentifier == voiceID && voicePreparationBookID == bookID { return .loading }
+        if preparedVoiceIdentifier == voiceID {
+            let record = try? libraryStore.book(id: bookID)
+            if record?.isPlayable == true && preparedAudioBookID != bookID { return .unloaded }
+            return .ready
+        }
+        if let voicePreparationError, voicePreparationErrorID == voiceID {
+            return .failed(voicePreparationError)
+        }
+        return .unloaded
+    }
+
+    private var voicePreparationErrorID: String?
+
+    func prepareVoiceIfNeeded(bookID: UUID, retry: Bool = false, startWhenReady: Bool = false) {
+        guard let voiceID = (try? libraryStore.book(id: bookID))?.voiceIdentifier,
+            voiceID.hasPrefix("neural:")
+        else { return }
+        if voicePreparationState(for: bookID) == .ready {
+            if startWhenReady { speakCurrentChunk() }
+            return
+        }
+        if preparingVoiceIdentifier == voiceID && voicePreparationBookID == bookID {
+            startAfterVoicePreparation = startAfterVoicePreparation || startWhenReady
+            return
+        }
+        if case .failed = voicePreparationState(for: bookID), !retry { return }
+        voicePreparationTask?.cancel()
+        voicePreparationID = UUID()
+        let preparationID = voicePreparationID
+        preparedVoiceIdentifier = nil
+        preparedAudioBookID = nil
+        voicePreparationBookID = bookID
+        preparingVoiceIdentifier = voiceID
+        isPreparingFirstPassage = false
+        voicePreparationError = nil
+        voicePreparationErrorID = nil
+        startAfterVoicePreparation = startWhenReady
+        voicePreparationTask = Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await engine.prepareVoice(identifier: voiceID)
+                guard !Task.isCancelled, self.voicePreparationID == preparationID else { return }
+                self.preparedVoiceIdentifier = voiceID
+                self.isPreparingFirstPassage = true
+                if let request = try await self.firstAudioRequest(bookID: bookID, voiceID: voiceID) {
+                    try await engine.prepareAudio(for: request)
+                }
+                guard !Task.isCancelled, self.voicePreparationID == preparationID else { return }
+                self.isPreparingFirstPassage = false
+                self.preparingVoiceIdentifier = nil
+                self.preparedAudioBookID = bookID
+                if self.startAfterVoicePreparation, self.currentBookID == bookID {
+                    self.startAfterVoicePreparation = false
+                    self.speakCurrentChunk()
+                }
+            } catch {
+                guard !Task.isCancelled, self.voicePreparationID == preparationID else { return }
+                self.isPreparingFirstPassage = false
+                self.preparingVoiceIdentifier = nil
+                self.preparedVoiceIdentifier = nil
+                self.voicePreparationError = error.localizedDescription
+                self.voicePreparationErrorID = voiceID
+                self.startAfterVoicePreparation = false
+                if self.currentBookID == bookID, self.state == .preparingVoice {
+                    self.persistImmediately()
+                    self.setState(.failed(error.localizedDescription))
+                }
+            }
+        }
+    }
+
+    private func firstAudioRequest(bookID: UUID, voiceID: String) async throws -> NarrationRequest? {
+        guard let record = try libraryStore.book(id: bookID), record.isPlayable else { return nil }
+        let chunk: SpeechChunk
+        let offset: Int
+        let resume: AudioResumePoint?
+        if currentBookID == bookID, let currentChunk {
+            chunk = currentChunk
+            offset = currentUTF16Offset
+            resume = currentAudioResume
+        } else {
+            let chunks = try await indexStore.chunks(bookID: bookID, around: nil, limit: .max)
+            guard let first = chunks.first else { return nil }
+            let saved = record.readingPosition()
+            if let saved, let exact = chunks.first(where: { $0.id == saved.chunkID }) {
+                chunk = exact
+                offset = saved.utf16Offset
+                resume = saved.audioResume
+            } else if let fallback = try await indexStore.position(
+                bookID: bookID, normalizedWordOffset: saved?.normalizedWordOffset ?? 0
+            ) {
+                chunk = fallback.chunk
+                offset = 0
+                resume = nil
+            } else {
+                chunk = first
+                offset = 0
+                resume = nil
+            }
+        }
+        return NarrationRequest(
+            chunk: chunk,
+            voiceIdentifier: voiceID,
+            languageCode: record.languageCode,
+            rate: Float(0.5 * max(0.5, min(record.narrationRate, 2))),
+            speedMultiplier: Float(max(0.5, min(record.narrationRate, 2))),
+            startUTF16Offset: offset,
+            audioResume: resume
+        )
+    }
 
     init(
         engine: any NarrationEngine,
@@ -64,6 +197,10 @@ final class PlaybackCoordinator {
     }
 
     func play(bookID: UUID, startingAt sectionID: UUID? = nil) async {
+        guard voicePreparationState(for: bookID) == .ready else {
+            prepareVoiceIfNeeded(bookID: bookID)
+            return
+        }
         if currentBookID == bookID {
             if let sectionID {
                 await goToChapter(sectionID: sectionID)
@@ -120,10 +257,9 @@ final class PlaybackCoordinator {
 
     func resume() {
         guard currentChunk != nil, state != .preparingVoice else { return }
-        if let currentBookID,
-            let selectedVoiceIdentifier = try? libraryStore.book(id: currentBookID)?.voiceIdentifier,
-            selectedVoiceIdentifier != activeVoiceIdentifier
-        {
+        guard let currentBookID, voicePreparationState(for: currentBookID) == .ready else { return }
+        let selectedVoiceIdentifier = (try? libraryStore.book(id: currentBookID))?.voiceIdentifier
+        if selectedVoiceIdentifier != activeVoiceIdentifier {
             engine.stop()
             speakCurrentChunk()
             return
@@ -134,6 +270,7 @@ final class PlaybackCoordinator {
 
     func stop() {
         persistImmediately()
+        if preparingVoiceIdentifier != nil { cancelVoicePreparation() }
         engine.stop()
         setState(.stopped)
     }
@@ -141,6 +278,7 @@ final class PlaybackCoordinator {
     func clearSession(for bookID: UUID) {
         guard currentBookID == bookID else { return }
         persistImmediately()
+        if voicePreparationBookID == bookID { cancelVoicePreparation() }
         engine.stop()
         queuedChunks = []
         currentBookID = nil
@@ -203,8 +341,36 @@ final class PlaybackCoordinator {
     }
 
     func setVoiceIdentifier(_ voiceIdentifier: String?, bookID: UUID) {
-        try? libraryStore.saveVoiceIdentifier(voiceIdentifier, bookID: bookID)
+        guard (try? libraryStore.saveVoiceIdentifier(voiceIdentifier, bookID: bookID)) != nil else { return }
+        if voiceIdentifier?.hasPrefix("neural:") == true {
+            if currentBookID == bookID,
+                state == .preparingVoice
+                    || (state == .playing && activeVoiceIdentifier?.hasPrefix("neural:") != true)
+            {
+                persistImmediately()
+                engine.stop()
+                setState(.preparingVoice)
+                prepareVoiceIfNeeded(bookID: bookID, startWhenReady: true)
+            } else {
+                prepareVoiceIfNeeded(bookID: bookID)
+            }
+            return
+        }
+        cancelVoicePreparation()
         restartCurrentUtteranceIfNeeded(bookID: bookID)
+    }
+
+    private func cancelVoicePreparation() {
+        voicePreparationTask?.cancel()
+        voicePreparationID = UUID()
+        preparingVoiceIdentifier = nil
+        preparedVoiceIdentifier = nil
+        preparedAudioBookID = nil
+        voicePreparationBookID = nil
+        voicePreparationError = nil
+        voicePreparationErrorID = nil
+        startAfterVoicePreparation = false
+        isPreparingFirstPassage = false
     }
 
     func nextChapter() async {
@@ -293,6 +459,11 @@ final class PlaybackCoordinator {
             let bookID = currentBookID,
             let record = try? libraryStore.book(id: bookID)
         else { return }
+        if voicePreparationState(for: bookID) != .ready {
+            setState(.preparingVoice)
+            prepareVoiceIfNeeded(bookID: bookID, startWhenReady: true)
+            return
+        }
         let rate = Float(0.5 * max(0.5, min(record.narrationRate, 2)))
         let speedMultiplier = Float(max(0.5, min(record.narrationRate, 2)))
         activeVoiceIdentifier = record.voiceIdentifier
@@ -378,6 +549,12 @@ final class PlaybackCoordinator {
     }
 
     private func resumeAfterIndexUpdate(_ update: IndexingUpdate) async {
+        if update.bookID == voicePreparationBookID,
+            update.progress.phase == .playable,
+            voicePreparationState(for: update.bookID) == .unloaded
+        {
+            prepareVoiceIfNeeded(bookID: update.bookID)
+        }
         guard state == .bufferingForIndex,
             update.bookID == currentBookID,
             update.progress.phase != .failed
@@ -489,6 +666,8 @@ final class PlaybackCoordinator {
         switch state {
         case .playing:
             if activeVoiceIdentifier?.hasPrefix("neural:") == true { return }
+        case .preparingVoice:
+            break
         case .failed:
             break
         default:

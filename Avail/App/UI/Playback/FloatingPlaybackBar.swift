@@ -181,7 +181,7 @@ struct FloatingPlaybackBar: View {
         case .empty:
             false
         case .resumable:
-            true
+            presentation.canTogglePlayback
         case .active:
             presentation.canTogglePlayback
         }

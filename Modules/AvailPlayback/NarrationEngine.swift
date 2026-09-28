@@ -5,6 +5,8 @@ public protocol NarrationEngine: AnyObject {
     var voices: [NarrationVoice] { get }
     var events: AsyncStream<NarrationEvent> { get }
 
+    func prepareVoice(identifier: String) async throws
+    func prepareAudio(for request: NarrationRequest) async throws
     func speak(_ request: NarrationRequest)
     func pause()
     func resume()
@@ -12,6 +14,9 @@ public protocol NarrationEngine: AnyObject {
 }
 
 public extension NarrationEngine {
+    func prepareVoice(identifier: String) async throws {}
+    func prepareAudio(for request: NarrationRequest) async throws {}
+
     func voices(matching languageCode: String?) -> [NarrationVoice] {
         guard let languageCode, !languageCode.isEmpty else { return voices }
         return voices.filter { $0.matches(languageCode: languageCode) }
