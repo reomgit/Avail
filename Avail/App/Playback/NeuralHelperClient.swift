@@ -87,6 +87,25 @@ final class NeuralHelperClient {
         #endif
     }
 
+    func prepareModel(bookmark: Data) async throws {
+        #if arch(arm64)
+            let response = XPCContinuation<Void>()
+            let remote = try proxy { response.complete(.failure($0)) }
+            try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
+                response.install(continuation)
+                remote.prepareModel(bookmark: bookmark) { error in
+                    if let error {
+                        response.complete(.failure(NeuralHelperClientError.service(error)))
+                    } else {
+                        response.complete(.success(()))
+                    }
+                }
+            }
+        #else
+            throw NeuralHelperClientError.unsupportedMac
+        #endif
+    }
+
     func synthesize(requestID: UUID, bookmark: Data, text: String) async throws -> (wav: Data, sampleRate: Int) {
         try NeuralPhrase.validate(text)
         #if arch(arm64)

@@ -51,7 +51,7 @@ struct ZenPlaybackControlState: Equatable {
         case .paused:
             return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .resume)
         case .preparingVoice:
-            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: true, toggleAction: .pause)
+            return ZenPlaybackControlState(isPlaying: false, canTogglePlayback: false, toggleAction: .unavailable)
         case .bufferingForIndex, .seeking, .failed:
             return ZenPlaybackControlState(
                 isPlaying: false,

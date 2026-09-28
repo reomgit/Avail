@@ -18,6 +18,7 @@ final class AppEnvironment {
     var launchState: LaunchState
     var selectedBookID: UUID?
     var lastActionError: String?
+    private(set) var isPreparingVoicePreview = false
     private(set) var voiceCatalogError: String?
     private(set) var voiceModelCatalog: VoiceModelCatalog?
     private var neuralNarrationEngine: CompositeNarrationEngine?
@@ -129,6 +130,8 @@ final class AppEnvironment {
     func previewVoice(id: String) async throws {
         guard supportsLocalNeuralNarration else { throw NeuralHelperClientError.unsupportedMac }
         guard let neuralNarrationEngine else { throw VoiceModelCatalogError.missingEntry }
+        isPreparingVoicePreview = true
+        defer { isPreparingVoicePreview = false }
         let audio = try await neuralNarrationEngine.synthesizePreview(
             voiceID: id,
             text: "This is a short local voice preview from Avail."

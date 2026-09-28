@@ -28,6 +28,25 @@ final class VoiceModelCatalogTests: XCTestCase {
         XCTAssertTrue(try makeCatalog().entries.isEmpty)
     }
 
+    func testHelperTransferBookmarkResolvesInReceivingProcess() throws {
+        let source = try makeFishFixture()
+        let catalog = try makeCatalog()
+        let entry = try catalog.linkModel(at: source)
+        let lease = try catalog.beginModelAccess(id: entry.id)
+
+        let transferBookmark = try lease.makeHelperTransferBookmark()
+        var isStale = false
+        let helperURL = try URL(
+            resolvingBookmarkData: transferBookmark,
+            options: [],
+            relativeTo: nil,
+            bookmarkDataIsStale: &isStale
+        )
+
+        XCTAssertFalse(isStale)
+        XCTAssertEqual(helperURL.standardizedFileURL, source.standardizedFileURL)
+    }
+
     func testManagedCopySurvivesSourceRemovalAndNeedsConfirmationToTrash() async throws {
         let source = try makeFishFixture()
         let trashURL = sandbox.appending(path: "TestTrash", directoryHint: .isDirectory)

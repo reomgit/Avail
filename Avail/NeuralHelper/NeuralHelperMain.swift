@@ -22,70 +22,64 @@ private actor FishModelHost {
         }
     }
 
+    func prepare(folder: URL) async throws {
+        try await synthesisQueue.run { [self] in
+            _ = try await load(folder: folder)
+        }
+    }
+
     private func generate(folder: URL, text: String) async throws -> (Data, Int) {
+        let model = try await load(folder: folder)
+        let samples: [Float]
+        do {
+            samples = try await model.generate(
+                text: text, voice: nil, refAudio: nil, refText: nil, language: nil
+            ).asArray(Float.self)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch {
+            throw NeuralHelperError.invalidPhrase(
+                "Fish Audio could not generate this phrase. Check available memory and try again."
+            )
+        }
         try Task.checkCancellation()
-        let fingerprint = try FishS2ModelFolder.cacheFingerprint(at: folder)
+        return (try GeneratedAudioWAVEncoder.encode(samples: samples, sampleRate: model.sampleRate), model.sampleRate)
+    }
+
+    private func load(folder: URL) async throws -> FishSpeechModel {
+        try Task.checkCancellation()
+        let fingerprint: String
+        do {
+            fingerprint = try FishS2ModelFolder.cacheFingerprint(at: folder)
+        } catch is CancellationError {
+            throw CancellationError()
+        } catch let error as NeuralHelperError {
+            throw error
+        } catch {
+            throw NeuralHelperError.invalidModel(
+                "Avail could not inspect the Fish Audio model files. Reconnect the folder and try again."
+            )
+        }
         let path = folder.standardizedFileURL.path
-        let model: FishSpeechModel
         if loadedPath == path, loadedFingerprint == fingerprint, let loadedModel {
-            model = loadedModel
+            return loadedModel
         } else {
-            model = try await FishSpeechModel.fromModelDirectory(folder)
+            let model: FishSpeechModel
+            do {
+                model = try await FishSpeechModel.fromModelDirectory(folder)
+            } catch is CancellationError {
+                throw CancellationError()
+            } catch {
+                throw NeuralHelperError.invalidModel(
+                    "Avail could not load the Fish Audio model into memory. Check that its files are available and your Mac has enough free memory, then try again."
+                )
+            }
             try Task.checkCancellation()
             loadedModel = model
             loadedPath = path
             loadedFingerprint = fingerprint
+            return model
         }
-
-        let samples = try await model.generate(
-            text: text, voice: nil, refAudio: nil, refText: nil, language: nil
-        ).asArray(Float.self)
-        try Task.checkCancellation()
-        return (try WAVEncoder.encode(samples: samples, sampleRate: model.sampleRate), model.sampleRate)
-    }
-}
-
-private enum WAVEncoder {
-    static func encode(samples: [Float], sampleRate: Int) throws -> Data {
-        guard sampleRate > 0, sampleRate <= 192_000, !samples.isEmpty,
-            samples.count <= 10_000_000
-        else {
-            throw NeuralHelperError.invalidPhrase("The model returned unsupported audio.")
-        }
-
-        let byteCount = samples.count * MemoryLayout<Int16>.size
-        var data = Data(capacity: 44 + byteCount)
-        func write(_ text: String) { data.append(contentsOf: text.utf8) }
-        func write16(_ number: UInt16) {
-            data.append(UInt8(truncatingIfNeeded: number))
-            data.append(UInt8(truncatingIfNeeded: number >> 8))
-        }
-        func write32(_ number: UInt32) {
-            for shift in stride(from: 0, to: 32, by: 8) {
-                data.append(UInt8(truncatingIfNeeded: number >> shift))
-            }
-        }
-
-        write("RIFF")
-        write32(UInt32(36 + byteCount))
-        write("WAVEfmt ")
-        write32(16)
-        write16(1)  // PCM
-        write16(1)  // Mono
-        write32(UInt32(sampleRate))
-        write32(UInt32(sampleRate * 2))
-        write16(2)
-        write16(16)
-        write("data")
-        write32(UInt32(byteCount))
-        for sample in samples {
-            guard sample.isFinite else {
-                throw NeuralHelperError.invalidPhrase("The model returned invalid audio samples.")
-            }
-            let pcm = Int16((max(-1, min(1, sample)) * Float(Int16.max)).rounded())
-            write16(UInt16(bitPattern: pcm))
-        }
-        return data
     }
 }
 
@@ -97,12 +91,27 @@ private final class NeuralHelperService: NSObject, NeuralHelperXPCProtocol, @unc
     func validateModel(bookmark: Data, reply: @escaping (String?) -> Void) {
         do {
             let folder = try resolveFolder(bookmark)
-            let accessed = folder.startAccessingSecurityScopedResource()
-            defer { if accessed { folder.stopAccessingSecurityScopedResource() } }
+            defer { folder.stopAccessingSecurityScopedResource() }
             try FishS2ModelFolder.validate(at: folder)
             reply(nil)
         } catch {
             reply(error.localizedDescription)
+        }
+    }
+
+    func prepareModel(bookmark: Data, reply: @escaping (String?) -> Void) {
+        let safeReply = XPCReply { _, _, error in reply(error) }
+        Task.detached { [host] in
+            do {
+                let folder = try Self.resolveFolder(bookmark)
+                defer { folder.stopAccessingSecurityScopedResource() }
+                try await host.prepare(folder: folder)
+                safeReply.callback(nil, 0, nil)
+            } catch is CancellationError {
+                safeReply.callback(nil, 0, "Voice model preparation was cancelled.")
+            } catch {
+                safeReply.callback(nil, 0, error.localizedDescription)
+            }
         }
     }
 
@@ -128,8 +137,7 @@ private final class NeuralHelperService: NSObject, NeuralHelperXPCProtocol, @unc
             do {
                 try Task.checkCancellation()
                 let folder = try Self.resolveFolder(bookmark)
-                let accessed = folder.startAccessingSecurityScopedResource()
-                defer { if accessed { folder.stopAccessingSecurityScopedResource() } }
+                defer { folder.stopAccessingSecurityScopedResource() }
                 let (audio, sampleRate) = try await host.synthesize(folder: folder, text: text)
                 try Task.checkCancellation()
                 safeReply.callback(audio, sampleRate, nil)
@@ -158,12 +166,20 @@ private final class NeuralHelperService: NSObject, NeuralHelperXPCProtocol, @unc
 
     private static func resolveFolder(_ bookmark: Data) throws -> URL {
         var stale = false
-        let folder = try URL(
-            resolvingBookmarkData: bookmark,
-            options: [.withSecurityScope],
-            relativeTo: nil,
-            bookmarkDataIsStale: &stale
-        )
+        let folder: URL
+        do {
+            // The app sends a transient options-empty bookmark for this XPC process.
+            folder = try URL(
+                resolvingBookmarkData: bookmark,
+                options: [],
+                relativeTo: nil,
+                bookmarkDataIsStale: &stale
+            )
+        } catch {
+            throw NeuralHelperError.invalidModel(
+                "The neural helper could not reopen the model folder. Reconnect it in Voices settings."
+            )
+        }
         guard !stale else {
             throw NeuralHelperError.invalidModel("Model folder access expired. Reconnect it in Voices settings.")
         }

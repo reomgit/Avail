@@ -7,6 +7,15 @@ enum PersistentPlayerToggleAction: Equatable {
     case none
 }
 
+struct NarrationActivityPresentation: Equatable {
+    let label: String
+
+    static func make(state: PlaybackState?, isPreviewPreparing: Bool = false) -> NarrationActivityPresentation? {
+        guard state == .preparingVoice || isPreviewPreparing else { return nil }
+        return NarrationActivityPresentation(label: "Loading voice model…")
+    }
+}
+
 struct PlaybackBarPresentation: Equatable {
     let bookID: UUID
     let title: String
@@ -30,7 +39,7 @@ struct PlaybackBarPresentation: Equatable {
         case .stopped, .failed:
             .play
         case .preparingVoice:
-            .pause
+            .none
         case .bufferingForIndex, .seeking:
             .none
         }
@@ -52,9 +61,9 @@ struct PlaybackBarPresentation: Equatable {
             canSeek = false
             canTogglePlayback = false
         case .preparingVoice:
-            statusText = "Preparing voice audio…"
-            canSeek = true
-            canTogglePlayback = true
+            statusText = "Loading voice model…"
+            canSeek = false
+            canTogglePlayback = false
         case .seeking:
             statusText = "Seeking…"
             canSeek = false

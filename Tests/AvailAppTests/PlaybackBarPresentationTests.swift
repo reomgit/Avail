@@ -36,6 +36,19 @@ final class PlaybackBarPresentationTests: XCTestCase {
         )
     }
 
+    func testVoicePreparationShowsWindowLoadingActivityOnlyWhileItIsPreparing() throws {
+        let preparing = try XCTUnwrap(NarrationActivityPresentation.make(state: .preparingVoice))
+
+        XCTAssertEqual(preparing.label, "Loading voice model…")
+        XCTAssertNil(NarrationActivityPresentation.make(state: .playing))
+        XCTAssertNil(NarrationActivityPresentation.make(state: .paused))
+        XCTAssertNil(NarrationActivityPresentation.make(state: .failed("Choose another voice.")))
+        XCTAssertEqual(
+            NarrationActivityPresentation.make(state: .stopped, isPreviewPreparing: true)?.label,
+            "Loading voice model…"
+        )
+    }
+
     func testTransientAndFailureStatesMapToAccessibleStatus() throws {
         let buffering = try XCTUnwrap(makePresentation(state: .bufferingForIndex))
         let seeking = try XCTUnwrap(makePresentation(state: .seeking))
@@ -57,6 +70,13 @@ final class PlaybackBarPresentationTests: XCTestCase {
             PlaybackBarPresentation.toggleAction(for: .failed("Voice is unavailable")),
             .play
         )
+    }
+
+    func testVoicePreparationDisablesPlaybackControlsUntilTheModelIsReady() throws {
+        let presentation = try XCTUnwrap(makePresentation(state: .preparingVoice))
+
+        XCTAssertFalse(presentation.canTogglePlayback)
+        XCTAssertEqual(PlaybackBarPresentation.toggleAction(for: .preparingVoice), .none)
     }
 
     func testPlayingAndPausedStatesMapPrimaryAction() throws {

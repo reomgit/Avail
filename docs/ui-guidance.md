@@ -91,3 +91,15 @@ Decisions:
 - Provide a short test using synthetic text, plus specific recovery actions for an incompatible folder, missing model, or unavailable server. A failed neural voice must preserve the reading position and offer a macOS voice.
 - Show preparation and generation progress without blocking navigation or the persistent player. Neural narration emphasizes a phrase in Zen with semantic background and a non-color cue; system narration keeps word-range emphasis. Voice changes take effect at the next phrase boundary.
 - Describe server setup as optional and local to this Mac. Before adding a server, say it receives passage text and that its privacy behavior is controlled outside Avail. Keep Now Playing disclosure separate.
+
+## Voice preparation feedback — 2026-09-28
+
+Sources:
+
+- [SwiftUI ProgressView](https://developer.apple.com/documentation/SwiftUI/ProgressView)
+- [SwiftUI safeAreaInset](https://developer.apple.com/documentation/swiftui/view/safeareainset%28edge%3Aalignment%3Aspacing%3Acontent%3A%29)
+- [HIG: Windows](https://developer.apple.com/design/human-interface-guidelines/windows)
+
+Decision:
+
+- Show a labeled, indeterminate linear progress strip immediately below the native title bar while a local voice model loads or a short voice test is synthesized. Use a shared view in the library, Settings, and Zen windows so ongoing narration stays visible as people switch windows. Keep play, pause, seek, and remote-toggle actions unavailable until loading has either completed or failed; this prevents a cold model request from being mistaken for active playback. Hide the strip once audio is ready or playback fails. The model API does not report a reliable loading percentage, so do not imply determinate progress.

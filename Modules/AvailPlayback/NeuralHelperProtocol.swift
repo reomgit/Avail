@@ -4,6 +4,7 @@ import CryptoKit
 /// The Objective-C compatible boundary shared by the universal app and the arm64 XPC service.
 @objc public protocol NeuralHelperXPCProtocol {
     func validateModel(bookmark: Data, reply: @escaping (String?) -> Void)
+    func prepareModel(bookmark: Data, reply: @escaping (String?) -> Void)
     func synthesize(
         requestID: String,
         bookmark: Data,

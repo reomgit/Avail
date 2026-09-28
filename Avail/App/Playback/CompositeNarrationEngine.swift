@@ -42,6 +42,26 @@ final class CompositeNarrationEngine: NarrationEngine {
                 guard let catalog else { return voiceID }
                 return try await catalog.synthesisCacheIdentity(forProviderVoiceID: voiceID)
             },
+            prepare: { [weak catalog, helper] voiceID in
+                guard let catalog,
+                    let modelID = UUID(uuidString: String(voiceID.dropFirst("neural:".count))),
+                    let entry = catalog.entries.first(where: { $0.id == modelID })
+                else { throw VoiceModelCatalogError.missingEntry }
+                guard entry.source == .linked || entry.source == .managed else { return }
+                let lease: VoiceModelAccessLease
+                do {
+                    lease = try catalog.beginModelAccess(id: entry.id)
+                } catch {
+                    throw VoiceModelCatalogError.inaccessibleModel
+                }
+                let bookmark: Data
+                do {
+                    bookmark = try lease.makeHelperTransferBookmark()
+                } catch {
+                    throw VoiceModelCatalogError.inaccessibleModel
+                }
+                try await helper.prepareModel(bookmark: bookmark)
+            },
             generate: { [weak catalog, helper] voiceID, text in
                 guard let catalog,
                     let modelID = UUID(uuidString: String(voiceID.dropFirst("neural:".count))),
@@ -49,8 +69,18 @@ final class CompositeNarrationEngine: NarrationEngine {
                 else { throw VoiceModelCatalogError.missingEntry }
                 switch entry.source {
                 case .linked, .managed:
-                    let lease = try catalog.beginModelAccess(id: entry.id)
-                    guard let bookmark = lease.bookmarkData else { throw VoiceModelCatalogError.inaccessibleModel }
+                    let lease: VoiceModelAccessLease
+                    do {
+                        lease = try catalog.beginModelAccess(id: entry.id)
+                    } catch {
+                        throw VoiceModelCatalogError.inaccessibleModel
+                    }
+                    let bookmark: Data
+                    do {
+                        bookmark = try lease.makeHelperTransferBookmark()
+                    } catch {
+                        throw VoiceModelCatalogError.inaccessibleModel
+                    }
                     let result = try await helper.synthesize(requestID: UUID(), bookmark: bookmark, text: text)
                     return GeneratedAudio(wavData: result.wav, sampleRate: result.sampleRate)
                 case .loopbackServer:
@@ -119,8 +149,19 @@ final class CompositeNarrationEngine: NarrationEngine {
         else { throw VoiceModelCatalogError.missingEntry }
         switch entry.source {
         case .linked, .managed:
-            let lease = try catalog.beginModelAccess(id: entry.id)
-            guard let bookmark = lease.bookmarkData else { throw VoiceModelCatalogError.inaccessibleModel }
+            let lease: VoiceModelAccessLease
+            do {
+                lease = try catalog.beginModelAccess(id: entry.id)
+            } catch {
+                throw VoiceModelCatalogError.inaccessibleModel
+            }
+            let bookmark: Data
+            do {
+                bookmark = try lease.makeHelperTransferBookmark()
+            } catch {
+                throw VoiceModelCatalogError.inaccessibleModel
+            }
+            try await helper.prepareModel(bookmark: bookmark)
             let result = try await helper.synthesize(requestID: UUID(), bookmark: bookmark, text: text)
             return GeneratedAudio(wavData: result.wav, sampleRate: result.sampleRate)
         case .loopbackServer:

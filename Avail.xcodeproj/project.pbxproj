@@ -69,9 +69,15 @@
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = ( );
-			inputPaths = ( "$(BUILT_PRODUCTS_DIR)/AvailNeuralHelper.xpc", );
+			inputPaths = (
+				"$(BUILT_PRODUCTS_DIR)/AvailNeuralHelper.xpc/Contents/Info.plist",
+				"$(BUILT_PRODUCTS_DIR)/AvailNeuralHelper.xpc/Contents/MacOS/AvailNeuralHelper",
+			);
 			name = "Embed XPC Services";
-			outputPaths = ( "$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/XPCServices/AvailNeuralHelper.xpc", );
+			outputPaths = (
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/XPCServices/AvailNeuralHelper.xpc/Contents/Info.plist",
+				"$(TARGET_BUILD_DIR)/$(WRAPPER_NAME)/Contents/XPCServices/AvailNeuralHelper.xpc/Contents/MacOS/AvailNeuralHelper",
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "set -e\nmkdir -p \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Contents/XPCServices\"\n/usr/bin/ditto \"${BUILT_PRODUCTS_DIR}/AvailNeuralHelper.xpc\" \"${TARGET_BUILD_DIR}/${WRAPPER_NAME}/Contents/XPCServices/AvailNeuralHelper.xpc\"\n";

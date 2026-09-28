@@ -288,7 +288,9 @@ struct BookDetailView: View {
     }
 
     private func canPlay(_ book: LibraryBookRecord) -> Bool {
-        book.state != .missing && book.state != .failed && book.isPlayable
+        guard book.state != .missing && book.state != .failed && book.isPlayable else { return false }
+        return environment.playbackCoordinator?.currentBookID != book.id
+            || environment.playbackCoordinator?.state != .preparingVoice
     }
 
     private func primaryActionTitle(_ book: LibraryBookRecord) -> String {
@@ -297,14 +299,25 @@ struct BookDetailView: View {
         else {
             return book.positionUpdatedAt == nil ? "Listen" : "Continue"
         }
-        return playback.state == .playing ? "Pause" : "Continue"
+        switch playback.state {
+        case .playing:
+            return "Pause"
+        case .preparingVoice:
+            return "Loading Voice…"
+        default:
+            return "Continue"
+        }
     }
 
     private func primaryActionSymbol(_ book: LibraryBookRecord) -> String {
-        guard environment.playbackCoordinator?.currentBookID == book.id,
-            environment.playbackCoordinator?.state == .playing
-        else { return "play.fill" }
-        return "pause.fill"
+        switch environment.playbackCoordinator?.state {
+        case .playing? where environment.playbackCoordinator?.currentBookID == book.id:
+            return "pause.fill"
+        case .preparingVoice? where environment.playbackCoordinator?.currentBookID == book.id:
+            return "arrow.triangle.2.circlepath"
+        default:
+            return "play.fill"
+        }
     }
 
     private func togglePlayback(_ book: LibraryBookRecord) {

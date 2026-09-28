@@ -50,5 +50,8 @@ struct ZenReaderView: View {
         .onDisappear {
             model?.windowWillClose()
         }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            NarrationActivityStrip()
+        }
     }
 }

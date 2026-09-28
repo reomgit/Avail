@@ -112,14 +112,14 @@ final class PlaybackCoordinator {
     }
 
     func pause() {
-        guard currentChunk != nil else { return }
+        guard currentChunk != nil, state != .preparingVoice else { return }
         engine.pause()
         setState(.paused)
         persistImmediately()
     }
 
     func resume() {
-        guard currentChunk != nil else { return }
+        guard currentChunk != nil, state != .preparingVoice else { return }
         engine.resume()
         setState(.playing)
     }
@@ -549,7 +549,17 @@ final class PlaybackCoordinator {
                 pause: { [weak self] in self?.pause() },
                 toggle: { [weak self] in
                     guard let self else { return }
-                    if self.state == .playing { self.pause() } else { self.resume() }
+                    switch self.state {
+                    case .playing:
+                        self.pause()
+                    case .paused:
+                        self.resume()
+                    case .stopped, .failed:
+                        guard let bookID = self.currentBookID else { return }
+                        Task { await self.play(bookID: bookID) }
+                    case .bufferingForIndex, .preparingVoice, .seeking:
+                        break
+                    }
                 },
                 nextChapter: { [weak self] in Task { await self?.nextChapter() } },
                 previousChapter: { [weak self] in Task { await self?.previousChapter() } },

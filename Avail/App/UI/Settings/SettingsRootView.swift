@@ -19,5 +19,8 @@ struct SettingsRootView: View {
                 .tag("licenses")
         }
         .frame(width: 620, height: 580)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            NarrationActivityStrip()
+        }
     }
 }

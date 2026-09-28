@@ -8,8 +8,10 @@ import Foundation
 final class GeneratedNarrationEngine: NSObject, NarrationEngine, AVAudioPlayerDelegate {
     typealias Generator = @MainActor (String, String) async throws -> GeneratedAudio
     typealias CacheIdentity = @MainActor (String) async throws -> String
+    typealias Preparer = @MainActor (String) async throws -> Void
 
     private let available: () -> [NarrationVoice]
+    private let prepare: Preparer
     private let generate: Generator
     private let cacheIdentity: CacheIdentity
     private let cacheURL: URL
@@ -33,11 +35,13 @@ final class GeneratedNarrationEngine: NSObject, NarrationEngine, AVAudioPlayerDe
         cacheURL: URL,
         available: @escaping () -> [NarrationVoice],
         cacheIdentity: @escaping CacheIdentity = { $0 },
+        prepare: @escaping Preparer = { _ in },
         generate: @escaping Generator
     ) {
         self.cacheURL = cacheURL
         self.available = available
         self.cacheIdentity = cacheIdentity
+        self.prepare = prepare
         self.generate = generate
         (stream, continuation) = AsyncStream.makeStream(of: NarrationEvent.self)
         super.init()
@@ -61,6 +65,8 @@ final class GeneratedNarrationEngine: NSObject, NarrationEngine, AVAudioPlayerDe
             guard let self else { return }
             do {
                 let resolvedVoiceID = try await self.cacheIdentity(voiceID)
+                guard !Task.isCancelled, self.generationID == generationID else { return }
+                try await self.prepare(voiceID)
                 guard !Task.isCancelled, self.generationID == generationID else { return }
                 let key = Self.key(voiceID: resolvedVoiceID, text: phrase.text)
                 self.clipKey = key

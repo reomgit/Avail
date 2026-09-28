@@ -63,6 +63,12 @@ final class VoiceModelAccessLease {
         self.securityScopeStarted = securityScopeStarted
     }
 
+    func makeHelperTransferBookmark() throws -> Data {
+        // Apple documents options-empty bookmarks for handing file access to an XPC service.
+        // Keep the catalog's app-scoped bookmark separate for durable access by Avail itself.
+        try url.bookmarkData(options: [], includingResourceValuesForKeys: nil, relativeTo: nil)
+    }
+
     deinit {
         if securityScopeStarted {
             url.stopAccessingSecurityScopedResource()

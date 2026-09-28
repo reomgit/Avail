@@ -25,5 +25,8 @@ struct RootView: View {
             }
         }
         .frame(minWidth: 720, minHeight: 480)
+        .safeAreaInset(edge: .top, spacing: 0) {
+            NarrationActivityStrip()
+        }
     }
 }
