@@ -120,6 +120,14 @@ final class PlaybackCoordinator {
 
     func resume() {
         guard currentChunk != nil, state != .preparingVoice else { return }
+        if let currentBookID,
+            let selectedVoiceIdentifier = try? libraryStore.book(id: currentBookID)?.voiceIdentifier,
+            selectedVoiceIdentifier != activeVoiceIdentifier
+        {
+            engine.stop()
+            speakCurrentChunk()
+            return
+        }
         engine.resume()
         setState(.playing)
     }

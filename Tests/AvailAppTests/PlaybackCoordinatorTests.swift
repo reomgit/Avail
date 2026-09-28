@@ -317,6 +317,21 @@ final class PlaybackCoordinatorTests: XCTestCase {
         XCTAssertEqual(fixture.engine.spoken.last?.startUTF16Offset, 8)
     }
 
+    func testResumingAfterChoosingNeuralVoiceRestartsThePausedSystemNarration() async throws {
+        fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
+        await fixture.coordinator.play(bookID: fixture.bookID)
+        fixture.engine.emit(.started(chunkID: fixture.chunks[0].id))
+        await settle()
+        fixture.coordinator.pause()
+
+        fixture.coordinator.setVoiceIdentifier("neural:local", bookID: fixture.bookID)
+        fixture.coordinator.resume()
+
+        XCTAssertEqual(fixture.engine.spoken.count, 2)
+        XCTAssertEqual(fixture.engine.spoken.last?.voiceIdentifier, "neural:local")
+        XCTAssertEqual(fixture.engine.resumeCallCount, 0)
+    }
+
     func testGeneratedNarrationPublishesNowPlayingRateWhenAudioStarts() async throws {
         fixture = try await PlaybackFixture(sandbox: sandbox, chunkWordCounts: [20])
         let record = try XCTUnwrap(fixture.libraryStore.book(id: fixture.bookID))
