@@ -80,6 +80,8 @@ Do not store signing or notarization credentials in the repository.
 
 ## Artifact inspection
 
+The tagged release also publishes a drag-and-drop DMG containing `Avail.app` and an `Applications` shortcut. See [DMG distribution](dmg-distribution.md) for installation and checksum instructions. The workflow creates and verifies the compressed disk image after notarization and adds its SHA-256 digest to `SHA256SUMS.txt`.
+
 ```bash
 plutil -p dist/Avail.app/Contents/Info.plist
 codesign -dvvv --entitlements :- dist/Avail.app
